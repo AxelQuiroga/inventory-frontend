@@ -115,6 +115,7 @@ export function ProductsPage() {
               <th>Producto</th>
               <th>Stock</th>
               <th>Precio</th>
+              <th>Historial</th>
               {canMoveStock && <th>Movimientos</th>}
               {isAdmin && <th>Acciones</th>}
             </tr>
@@ -133,6 +134,10 @@ export function ProductsPage() {
                   {p.stock} {p.stock <= p.minStock && <strong>(stock bajo)</strong>}
                 </td>
                 <td>{p.price}</td>
+                {/* Lectura: cualquier rol autenticado */}
+                <td>
+                  <Link to={`/products/${p.id}/history`}>Historial</Link>
+                </td>
                 {canMoveStock && (
                   <td style={{ display: 'flex', gap: '0.5rem' }}>
                     <Link to={`/products/${p.id}/movement`}>Entrada</Link>

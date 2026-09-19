@@ -33,4 +33,10 @@ export const movementsApi = {
       body: JSON.stringify({ productId, quantity, reason }),
     })
   },
+
+  // Historial de un producto: lectura para cualquier rol autenticado.
+  // El server lo devuelve ordenado más-reciente-primero.
+  history(productId: string): Promise<Movement[]> {
+    return api(`/movements/history/${productId}`, { headers: authHeaders() })
+  },
 }

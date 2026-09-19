@@ -175,6 +175,22 @@ describe('ProductsPage — RBAC visible', () => {
     expect(screen.queryByRole('link', { name: /^entrada$/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /^salida$/i })).not.toBeInTheDocument()
   })
+
+  it('el link Historial es visible para cualquier rol autenticado', async () => {
+    // Lectura: el backend permite history a todos los roles
+    renderPage()
+    await screen.findByText('Martillo')
+    expect(screen.getAllByRole('link', { name: /^historial$/i }).length).toBeGreaterThan(0)
+    expect((screen.getAllByRole('link', { name: /^historial$/i }))[0]!.getAttribute('href')).toMatch(
+      /\/products\/.+\/history$/,
+    )
+
+    clearToken()
+    saveToken(tokenFor('VIEWER'))
+    renderPage()
+    await screen.findByText('Martillo')
+    expect(screen.getAllByRole('link', { name: /^historial$/i }).length).toBeGreaterThan(0)
+  })
 })
 
 describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {

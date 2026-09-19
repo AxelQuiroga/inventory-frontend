@@ -2,81 +2,62 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../test/test-utils'
-import { saveToken } from '../auth/tokenStore'
+import { saveToken, clearToken } from '../auth/tokenStore'
 import { movementsApi } from './movementsApi'
 
 const TOKEN = `x.${btoa(JSON.stringify({ email: 'a@b.c', role: 'OPERATOR' }))}.y`
 const base = import.meta.env.VITE_API_URL
 
-describe('movementsApi — contratos del backend', () => {
+const HISTORY = [
+  { id: 'm2', productId: 'p1', userId: 'u2', type: 'OUT', quantity: 4, reason: 'Venta', createdAt: '2026-09-19T10:00:00Z' },
+  { id: 'm1', productId: 'p1', userId: 'u1', type: 'IN', quantity: 30, reason: 'Compra', createdAt: '2026-09-19T09:00:00Z' },
+]
+
+describe('movementsApi — history (contrato GET /movements/history/:productId)', () => {
   beforeEach(() => {
     saveToken(TOKEN)
   })
 
-  it('entry hace POST /movements/entry con body {productId, quantity, reason}', async () => {
+  it('history hace GET a la URL correcta con el token y devuelve la lista', async () => {
     let capturedUrl = ''
-    let capturedBody: unknown
+    let capturedAuth: string | null = null
     server.use(
-      http.post('*/movements/entry', async ({ request }) => {
+      http.get('*/movements/history/:productId', ({ request }) => {
         capturedUrl = request.url
-        capturedBody = await request.json()
-        return HttpResponse.json({ id: 'm1', type: 'IN', quantity: 30 }, { status: 201 })
+        capturedAuth = request.headers.get('authorization')
+        return HttpResponse.json(HISTORY)
       }),
     )
 
-    const movement = await movementsApi.register({ productId: 'p1', quantity: 30, reason: 'Compra', type: 'IN' })
+    const history = await movementsApi.history('p1')
 
-    expect(movement.type).toBe('IN')
-    expect(capturedUrl).toBe(`${base}/movements/entry`)
-    expect(capturedBody).toEqual({ productId: 'p1', quantity: 30, reason: 'Compra' })
+    expect(history).toHaveLength(2)
+    expect(history[0]!.type).toBe('OUT') // más reciente primero
+    expect(capturedUrl).toBe(`${base}/movements/history/p1`)
+    expect(capturedAuth).toBe(`Bearer ${TOKEN}`)
   })
 
-  it('exit hace POST /movements/exit', async () => {
-    let capturedUrl = ''
+  it('propaga el error 404 de producto inexistente', async () => {
     server.use(
-      http.post('*/movements/exit', async ({ request }) => {
-        capturedUrl = request.url
-        return HttpResponse.json({ id: 'm2', type: 'OUT', quantity: 4 }, { status: 201 })
+      http.get('*/movements/history/:productId', () =>
+        HttpResponse.json({ message: 'Internal server error' }, { status: 500 }),
+      ),
+    )
+
+    await expect(movementsApi.history('no-existe')).rejects.toMatchObject({ status: 500 })
+  })
+
+  it('sin token va sin authorization header', async () => {
+    clearToken()
+    let sawAuthHeader: string | null = 'sentinel'
+    server.use(
+      http.get('*/movements/history/:productId', ({ request }) => {
+        sawAuthHeader = request.headers.get('authorization')
+        return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })
       }),
     )
 
-    const movement = await movementsApi.register({ productId: 'p1', quantity: 4, reason: 'Venta', type: 'OUT' })
-
-    expect(movement.type).toBe('OUT')
-    expect(capturedUrl).toBe(`${base}/movements/exit`)
-  })
-
-  it('propaga 400 Insufficient stock', async () => {
-    server.use(
-      http.post('*/movements/exit', () =>
-        HttpResponse.json({ message: 'Insufficient stock' }, { status: 400 }),
-      ),
-    )
-
-    await expect(
-      movementsApi.register({ productId: 'p1', quantity: 999, reason: 'Venta', type: 'OUT' }),
-    ).rejects.toMatchObject({ status: 400, message: 'Insufficient stock' })
-  })
-
-  it('propaga 400 Product is inactive', async () => {
-    server.use(
-      http.post('*/movements/entry', () =>
-        HttpResponse.json({ message: 'Product is inactive' }, { status: 400 }),
-      ),
-    )
-
-    await expect(
-      movementsApi.register({ productId: 'p1', quantity: 1, reason: 'X', type: 'IN' }),
-    ).rejects.toMatchObject({ status: 400, message: 'Product is inactive' })
-  })
-
-  it('propaga 403 Forbidden (VIEWER intenta mover stock)', async () => {
-    server.use(
-      http.post('*/movements/entry', () => HttpResponse.json({ message: 'Forbidden' }, { status: 403 })),
-    )
-
-    await expect(
-      movementsApi.register({ productId: 'p1', quantity: 1, reason: 'X', type: 'IN' }),
-    ).rejects.toMatchObject({ status: 403, message: 'Forbidden' })
+    await expect(movementsApi.history('p1')).rejects.toMatchObject({ status: 401 })
+    expect(sawAuthHeader).toBeNull()
   })
 })

@@ -7,6 +7,7 @@ import { DashboardPage } from './features/dashboard/DashboardPage'
 import { ProductsPage } from './features/products/ProductsPage'
 import { ProductFormPage } from './features/products/ProductFormPage'
 import { MovementFormPage } from './features/movements/MovementFormPage'
+import { MovementHistoryPage } from './features/movements/MovementHistoryPage'
 
 export default function App() {
   return (
@@ -46,6 +47,8 @@ export default function App() {
               </RoleRoute>
             }
           />
+          {/* Historial: lectura, cualquier rol autenticado */}
+          <Route path="/products/:productId/history" element={<MovementHistoryPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
