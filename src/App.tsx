@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
+import { Layout } from './shared/layout/Layout'
 import { LoginPage } from './features/auth/LoginPage'
 import { ProtectedRoute } from './features/auth/ProtectedRoute'
+import { DashboardPage } from './features/dashboard/DashboardPage'
 import { ProductsPage } from './features/products/ProductsPage'
 
 export default function App() {
@@ -9,14 +11,16 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
-          path="/products"
           element={
             <ProtectedRoute>
-              <ProductsPage />
+              <Layout />
             </ProtectedRoute>
           }
-        />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        >
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )

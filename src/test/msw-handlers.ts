@@ -1,11 +1,21 @@
 import { http, HttpResponse } from 'msw'
 import type { SetupWorker } from 'msw/browser'
 
-// Contratos según el backend real (auth-routes + auth-controller):
+// Contratos según el backend real:
 //   POST /auth/login → 200 { token } | 401 { message } | 400 { message, errors }
-type LoginHandler = Parameters<SetupWorker['use']>[0]
+//   GET  /products?lowStock&limit → 200 Product[] (activos; lowStock: stock <= minStock)
+type HttpHandler = Parameters<SetupWorker['use']>[0]
 
-export const loginHandlers: LoginHandler[] = [
+// Datos de prueba consistentes para dashboard y productos:
+// 4 productos, 2 con stock bajo (stock <= minStock), stock total 513.
+export const testProducts = [
+  { id: 'p1', name: 'Martillo', sku: 'MAR-1', category: 'Herramientas', unit: 'unit', price: 25.5, stock: 120, minStock: 10, active: true },
+  { id: 'p2', name: 'Taladro', sku: 'TAL-1', category: 'Herramientas', unit: 'unit', price: 99.99, stock: 3, minStock: 5, active: true },
+  { id: 'p3', name: 'Tornillos x100', sku: 'TOR-1', category: 'Ferretería', unit: 'caja', price: 8, stock: 0, minStock: 20, active: true },
+  { id: 'p4', name: 'Pintura blanca 4L', sku: 'PIE-1', category: 'Pinturería', unit: 'bidón', price: 45, stock: 390, minStock: 15, active: true },
+]
+
+export const loginHandlers: HttpHandler[] = [
   http.post('*/auth/login', async ({ request }) => {
     const body = (await request.json()) as { email: string; password: string }
 
@@ -24,3 +34,24 @@ export const loginHandlers: LoginHandler[] = [
     return HttpResponse.json({ message: 'Invalid credentials' }, { status: 401 })
   }),
 ]
+
+export const productsHandlers: HttpHandler[] = [
+  http.get('*/products', ({ request }) => {
+    const url = new URL(request.url)
+    let result = testProducts
+
+    if (url.searchParams.get('lowStock') === 'true') {
+      // Igual que el server: stock <= minStock
+      result = result.filter((p) => p.stock <= p.minStock)
+    }
+
+    const limit = url.searchParams.get('limit')
+    if (limit) {
+      result = result.slice(0, Number(limit))
+    }
+
+    return HttpResponse.json(result)
+  }),
+]
+
+export const allHandlers = [...loginHandlers, ...productsHandlers]
