@@ -10,10 +10,15 @@ export class ApiError extends Error {
   }
 }
 
+// URL base de la API. Default de desarrollo explícito: si falta .env la app
+// sigue funcionando en dev en vez de tirar "Error inesperado" con la URL
+// "undefined/...". En producción/deploy se setea VITE_API_URL siempre.
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   let response: Response
   try {
-    response = await fetch(import.meta.env.VITE_API_URL + path, {
+    response = await fetch(`${API_URL}${path}`, {
       headers: { 'content-type': 'application/json' },
       ...options,
     })
