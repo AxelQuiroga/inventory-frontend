@@ -2,8 +2,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { Layout } from './shared/layout/Layout'
 import { LoginPage } from './features/auth/LoginPage'
 import { ProtectedRoute } from './features/auth/ProtectedRoute'
+import { RoleRoute } from './features/auth/RoleRoute'
 import { DashboardPage } from './features/dashboard/DashboardPage'
 import { ProductsPage } from './features/products/ProductsPage'
+import { ProductFormPage } from './features/products/ProductFormPage'
+import { MovementFormPage } from './features/movements/MovementFormPage'
 
 export default function App() {
   return (
@@ -19,6 +22,30 @@ export default function App() {
         >
           <Route path="/" element={<DashboardPage />} />
           <Route path="/products" element={<ProductsPage />} />
+          <Route
+            path="/products/new"
+            element={
+              <RoleRoute roles={['ADMIN']}>
+                <ProductFormPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/products/:id/edit"
+            element={
+              <RoleRoute roles={['ADMIN']}>
+                <ProductFormPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/products/:id/movement"
+            element={
+              <RoleRoute roles={['ADMIN', 'OPERATOR']}>
+                <MovementFormPage />
+              </RoleRoute>
+            }
+          />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

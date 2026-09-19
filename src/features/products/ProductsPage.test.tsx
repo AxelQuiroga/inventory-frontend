@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { server } from '../../test/test-utils'
 import { testProducts } from '../../test/msw-handlers'
 import { ProductsPage } from './ProductsPage'
-import { saveToken } from '../auth/tokenStore'
+import { saveToken, clearToken } from '../auth/tokenStore'
 
 function tokenFor(role: string) {
   return `x.${btoa(JSON.stringify({ email: 'a@b.c', role }))}.y`
@@ -148,6 +148,32 @@ describe('ProductsPage — RBAC visible', () => {
 
     await screen.findByText('Martillo')
     expect(screen.queryByRole('button', { name: /desactivar/i })).not.toBeInTheDocument()
+  })
+
+  it('ADMIN ve links Entrada/Salida por producto', async () => {
+    // ADMIN ya está logueado por el beforeEach
+    renderPage()
+    await screen.findByText('Martillo')
+    expect(screen.getAllByRole('link', { name: /^entrada$/i }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: /^salida$/i }).length).toBeGreaterThan(0)
+  })
+
+  it('OPERATOR también ve los links de movimiento', async () => {
+    clearToken()
+    saveToken(tokenFor('OPERATOR'))
+    renderPage()
+    await screen.findByText('Martillo')
+    expect(screen.getAllByRole('link', { name: /^entrada$/i }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: /^salida$/i }).length).toBeGreaterThan(0)
+  })
+
+  it('VIEWER no ve links de movimiento (solo lectura)', async () => {
+    clearToken()
+    saveToken(tokenFor('VIEWER'))
+    renderPage()
+    await screen.findByText('Martillo')
+    expect(screen.queryByRole('link', { name: /^entrada$/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /^salida$/i })).not.toBeInTheDocument()
   })
 })
 

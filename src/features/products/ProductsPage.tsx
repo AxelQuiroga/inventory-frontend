@@ -11,10 +11,13 @@ export function ProductsPage() {
   const [search, setSearch] = useState(searchParams.get('search') ?? '')
   const [busyId, setBusyId] = useState<string | null>(null)
 
-  // RBAC visible: el backend restringe la escritura de productos a ADMIN
-  // (create/update/deactivate/reactivate). Se lee en cada render: la sesión
-  // vive en el token persistido y la página se monta después del login.
-  const isAdmin = getSessionUser()?.role === 'ADMIN'
+  // RBAC visible, leído en cada render: la sesión vive en el token
+  // persistido y la página se monta después del login.
+  //  - escritura de productos: ADMIN (create/update/deactivate/reactivate)
+  //  - movimientos de stock: ADMIN + OPERATOR (matriz del backend)
+  const role = getSessionUser()?.role
+  const isAdmin = role === 'ADMIN'
+  const canMoveStock = role === 'ADMIN' || role === 'OPERATOR'
 
   const load = useCallback(async () => {
     setError(null)
@@ -112,6 +115,7 @@ export function ProductsPage() {
               <th>Producto</th>
               <th>Stock</th>
               <th>Precio</th>
+              {canMoveStock && <th>Movimientos</th>}
               {isAdmin && <th>Acciones</th>}
             </tr>
           </thead>
@@ -129,6 +133,12 @@ export function ProductsPage() {
                   {p.stock} {p.stock <= p.minStock && <strong>(stock bajo)</strong>}
                 </td>
                 <td>{p.price}</td>
+                {canMoveStock && (
+                  <td style={{ display: 'flex', gap: '0.5rem' }}>
+                    <Link to={`/products/${p.id}/movement`}>Entrada</Link>
+                    <Link to={`/products/${p.id}/movement`}>Salida</Link>
+                  </td>
+                )}
                 {isAdmin && (
                   <td style={{ display: 'flex', gap: '0.5rem' }}>
                     <Link to={`/products/${p.id}/edit`}>Editar</Link>
