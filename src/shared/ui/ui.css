@@ -1,0 +1,283 @@
+/* Estilos del design system — un bloque por componente.
+   Solo consumen tokens; nada de valores mágicos. */
+
+/* ---- Button ---- */
+.Button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.Button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.Button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.Button--primary {
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
+.Button--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+.Button--secondary {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+.Button--secondary:hover:not(:disabled) {
+  border-color: var(--color-text-muted);
+}
+.Button--danger {
+  background: var(--color-danger);
+  color: var(--color-surface);
+}
+.Button--danger:hover:not(:disabled) {
+  background: var(--color-danger-hover);
+}
+.Button--ghost {
+  background: transparent;
+  color: var(--color-primary);
+}
+.Button--ghost:hover:not(:disabled) {
+  background: var(--color-primary-soft);
+}
+
+/* ---- Input ---- */
+.Input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.Input-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+}
+.Input-field {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  max-width: 100%;
+}
+.Input-field::placeholder {
+  color: var(--color-text-muted);
+}
+.Input-field:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+.Input-field:disabled {
+  background: var(--color-neutral-soft);
+  cursor: not-allowed;
+}
+.Input--error .Input-field {
+  border-color: var(--color-danger);
+}
+.Input--error .Input-field:focus-visible {
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.2);
+}
+.Input-error {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+}
+.Input-helper {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ---- Card ---- */
+.Card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---- Badge ---- */
+.Badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.Badge--success {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+.Badge--warning {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+.Badge--danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.Badge--info {
+  background: var(--color-info-soft);
+  color: var(--color-info);
+}
+.Badge--neutral {
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+}
+
+/* ---- Alert ---- */
+.Alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+  border: 1px solid transparent;
+}
+.Alert--info {
+  background: var(--color-info-soft);
+  color: var(--color-info);
+  border-color: rgba(23, 92, 211, 0.25);
+}
+.Alert--success {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  border-color: rgba(18, 128, 92, 0.25);
+}
+.Alert--warning {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  border-color: rgba(181, 71, 8, 0.25);
+}
+.Alert--error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border-color: rgba(217, 45, 32, 0.25);
+}
+
+/* ---- Table ---- */
+.Table-wrapper {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.Table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-md);
+}
+.Table-wrapper th {
+  text-align: left;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.Table-wrapper td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+.Table-wrapper tbody tr:last-child td {
+  border-bottom: none;
+}
+.Table-wrapper tbody tr:hover {
+  background: var(--color-bg);
+}
+.Table--align-right {
+  text-align: right;
+}
+
+/* ---- EmptyState ---- */
+.EmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-7) var(--space-5);
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.EmptyState-title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+.EmptyState-description {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--color-text-muted);
+}
+
+/* ---- Spinner ---- */
+.Spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+}
+.Spinner-circle {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: Spinner-rotate 0.7s linear infinite;
+}
+.Spinner--small .Spinner-circle {
+  width: 12px;
+  height: 12px;
+  border-width: 2px;
+}
+@keyframes Spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- PageHeader ---- */
+.PageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+.PageHeader-title {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--color-text);
+}
+.PageHeader-description {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-md);
+  color: var(--color-text-muted);
+}
