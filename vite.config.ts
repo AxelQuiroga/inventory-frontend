@@ -12,5 +12,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['src/test/setup.ts'],
     css: false,
+    // Misma base URL que dev (del .env.example): hace determinísticas las
+    // aserciones de URL en los tests del api client.
+    env: { VITE_API_URL: 'http://localhost:3000' },
   },
 })

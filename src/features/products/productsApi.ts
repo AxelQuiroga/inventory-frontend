@@ -5,7 +5,10 @@ export interface Product {
   id: string
   name: string
   sku: string
+  category: string
+  unit: string
   price: number
+  description?: string
   stock: number
   minStock: number
   active: boolean
@@ -20,6 +23,26 @@ export interface ListProductsParams {
   page?: number
 }
 
+// Authorization solo cuando hay sesión (sin token no se manda el header).
+function authHeaders(): Record<string, string> {
+  const token = getToken()
+  return token ? { authorization: `Bearer ${token}` } : {}
+}
+
+// Payload de creación según createProductSchema del backend (zod).
+export interface CreateProductInput {
+  name: string
+  sku: string
+  category: string
+  unit: string
+  price: number
+  description?: string
+  minStock?: number
+}
+
+// Payload de edición según updateProductSchema: todos los campos opcionales.
+export type UpdateProductInput = Partial<CreateProductInput>
+
 export const productsApi = {
   list(params: ListProductsParams = {}): Promise<Product[]> {
     const query = new URLSearchParams()
@@ -31,8 +54,35 @@ export const productsApi = {
     if (params.page !== undefined) query.set('page', String(params.page))
 
     const qs = query.toString()
-    return api(`/products${qs ? `?${qs}` : ''}`, {
-      headers: { authorization: `Bearer ${getToken() ?? ''}` },
+    return api(`/products${qs ? `?${qs}` : ''}`, { headers: authHeaders() })
+  },
+
+  getById(id: string): Promise<Product> {
+    return api(`/products/${id}`, { headers: authHeaders() })
+  },
+
+  create(data: CreateProductInput): Promise<Product> {
+    return api('/products', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(data),
+    })
+  },
+
+  update(id: string, data: UpdateProductInput): Promise<Product> {
+    return api(`/products/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(data),
+    })
+  },
+
+  // setActive mapea a los contratos reales: deactivate/reactivate son POST
+  // con path explícito (no hay PATCH ni toggle en la API).
+  setActive(id: string, active: boolean): Promise<Product> {
+    return api(`/products/${id}/${active ? 'reactivate' : 'deactivate'}`, {
+      method: 'POST',
+      headers: authHeaders(),
     })
   },
 }
