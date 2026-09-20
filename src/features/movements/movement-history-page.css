@@ -1,0 +1,13 @@
+.History-product {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+  max-width: 480px;
+}
+
+.History-back {
+  display: inline-block;
+  margin-top: var(--space-4);
+  color: var(--color-primary);
+}

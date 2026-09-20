@@ -123,6 +123,37 @@ describe('ProductFormPage — modo editar', () => {
     expect(screen.getByRole('button', { name: /guardar/i })).toBeInTheDocument()
   })
 
+  it('no repite el GET del producto durante el submit (usa el ya precargado)', async () => {
+    const user = userEvent.setup()
+    let getCalls = 0
+    let putCalls = 0
+    server.use(
+      http.get('*/products/:id', () => {
+        getCalls += 1
+        return HttpResponse.json({
+          id: 'p1', name: 'Martillo', sku: 'MAR-1', category: 'Herramientas',
+          unit: 'unit', price: 25.5, minStock: 10, description: 'Acero', stock: 120, active: true,
+        })
+      }),
+      http.put('*/products/:id', async ({ request }) => {
+        putCalls += 1
+        await request.json()
+        return HttpResponse.json({ id: 'p1', name: 'Martillo Pro' })
+      }),
+    )
+    renderForm('p1')
+    await screen.findByLabelText('Nombre')
+
+    const name = screen.getByLabelText('Nombre')
+    await user.clear(name)
+    await user.type(name, 'Martillo Pro')
+    await user.click(screen.getByRole('button', { name: /guardar/i }))
+
+    await waitFor(() => expect(putCalls).toBe(1))
+    expect(getCalls).toBe(1) // solo la precarga: ni diff ni submit re-descargan
+    expect(screen.getByText('listado de productos')).toBeInTheDocument()
+  })
+
   it('submit hace PUT con los campos modificados y vuelve al listado', async () => {
     const user = userEvent.setup()
     let capturedBody: unknown

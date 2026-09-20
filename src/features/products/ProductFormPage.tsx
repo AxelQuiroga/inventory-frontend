@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { Alert, Button, Card, Input, PageHeader } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { productsApi, type Product } from './productsApi'
+import './product-form-page.css'
 
 // Modo crear y modo editar en un solo componente: la ruta decide.
 // Crear → POST con createProductSchema; Editar → PUT solo con campos cambiados.
@@ -21,15 +23,21 @@ export function ProductFormPage() {
   const editing = Boolean(id)
 
   const [form, setForm] = useState(emptyForm)
+  const [original, setOriginal] = useState<Product | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [loading, setLoading] = useState(editing)
 
   useEffect(() => {
     if (!editing) return
+    let cancelled = false
     productsApi
       .getById(id!)
-      .then((p: Product) =>
+      .then((p: Product) => {
+        if (cancelled) return
+        // Se conserva el producto original: el diff del submit lo usa sin
+        // volver a pedirlo (un solo GET por edición).
+        setOriginal(p)
         setForm({
           name: p.name,
           sku: p.sku,
@@ -38,12 +46,19 @@ export function ProductFormPage() {
           price: String(p.price),
           description: p.description ?? '',
           minStock: String(p.minStock),
-        }),
-      )
-      .catch((err: unknown) =>
-        setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor'),
-      )
-      .finally(() => setLoading(false))
+        })
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [editing, id])
 
   function set(field: keyof typeof emptyForm, value: string) {
@@ -66,9 +81,9 @@ export function ProductFormPage() {
     }
 
     try {
-      if (editing) {
-        // PUT con diff: el backend acepta campos opcionales (updateProductSchema)
-        const original = await productsApi.getById(id!)
+      if (editing && original) {
+        // PUT con diff contra el producto precargado (updateProductSchema acepta
+        // campos opcionales). Ningún GET extra en el submit.
         const changes: Record<string, unknown> = {}
         if (payload.name !== original.name) changes.name = payload.name
         if (payload.sku !== original.sku) changes.sku = payload.sku
@@ -89,58 +104,105 @@ export function ProductFormPage() {
     }
   }
 
-  if (loading) return <p>Cargando...</p>
+  if (loading) {
+    return (
+      <>
+        <PageHeader title={editing ? 'Editar producto' : 'Nuevo producto'} />
+        <Card>Cargando producto…</Card>
+      </>
+    )
+  }
 
   return (
     <>
-      <h1>{editing ? 'Editar producto' : 'Nuevo producto'}</h1>
+      <PageHeader
+        title={editing ? 'Editar producto' : 'Nuevo producto'}
+        description={
+          editing ? 'Modificá solo los campos que necesitás cambiar' : 'Completá los datos del producto'
+        }
+      />
 
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="name">Nombre</label>
-        <input id="name" value={form.name} onChange={(e) => set('name', e.target.value)} required />
+      <Card className="ProductForm-card">
+        <form onSubmit={handleSubmit} className="ProductForm-form">
+          <div className="ProductForm-grid">
+            <Input
+              id="name"
+              label="Nombre"
+              value={form.name}
+              onChange={(e) => set('name', e.target.value)}
+              required
+            />
 
-        <label htmlFor="sku">SKU</label>
-        <input id="sku" value={form.sku} onChange={(e) => set('sku', e.target.value)} required />
+            <Input
+              id="sku"
+              label="SKU"
+              value={form.sku}
+              onChange={(e) => set('sku', e.target.value)}
+              required
+            />
 
-        <label htmlFor="category">Categoría</label>
-        <input id="category" value={form.category} onChange={(e) => set('category', e.target.value)} required />
+            <Input
+              id="category"
+              label="Categoría"
+              value={form.category}
+              onChange={(e) => set('category', e.target.value)}
+              required
+            />
 
-        <label htmlFor="unit">Unidad</label>
-        <input id="unit" value={form.unit} onChange={(e) => set('unit', e.target.value)} required />
+            <Input
+              id="unit"
+              label="Unidad"
+              value={form.unit}
+              onChange={(e) => set('unit', e.target.value)}
+              required
+            />
 
-        <label htmlFor="price">Precio</label>
-        <input
-          id="price"
-          type="number"
-          min="0.01"
-          step="0.01"
-          value={form.price}
-          onChange={(e) => set('price', e.target.value)}
-          required
-        />
+            <Input
+              id="price"
+              label="Precio"
+              type="number"
+              min={0.01}
+              step={0.01}
+              value={form.price}
+              onChange={(e) => set('price', e.target.value)}
+              required
+            />
 
-        <label htmlFor="description">Descripción</label>
-        <textarea id="description" value={form.description} onChange={(e) => set('description', e.target.value)} />
+            <Input
+              id="minStock"
+              label="Stock mínimo"
+              type="number"
+              min={0}
+              step={1}
+              value={form.minStock}
+              onChange={(e) => set('minStock', e.target.value)}
+            />
 
-        <label htmlFor="minStock">Stock mínimo</label>
-        <input
-          id="minStock"
-          type="number"
-          min="0"
-          step="1"
-          value={form.minStock}
-          onChange={(e) => set('minStock', e.target.value)}
-        />
+            <div className="ProductForm-full">
+              <label className="Input-label" htmlFor="description">Descripción</label>
+              <textarea
+                id="description"
+                className="Input-field ProductForm-textarea"
+                value={form.description}
+                onChange={(e) => set('description', e.target.value)}
+              />
+            </div>
+          </div>
 
-        {error && (
-          <p role="alert" style={{ color: 'red' }}>{error}</p>
-        )}
+          {error && (
+            <Alert tone="error">{error}</Alert>
+          )}
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Guardando...' : editing ? 'Guardar cambios' : 'Crear producto'}
-        </button>
-        <Link to="/products">Cancelar</Link>
-      </form>
+          <div className="ProductForm-actions">
+            <Button type="submit" loading={submitting}>
+              {editing ? 'Guardar cambios' : 'Crear producto'}
+            </Button>
+            <Link to="/products">
+              <Button variant="ghost">Cancelar</Button>
+            </Link>
+          </div>
+        </form>
+      </Card>
     </>
   )
 }

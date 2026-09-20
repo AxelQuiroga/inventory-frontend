@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { Alert, Button, Card, Input } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { authApi } from './authApi'
 import { saveToken } from './tokenStore'
+import './login-page.css'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -27,22 +29,38 @@ export function LoginPage() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h1>Iniciar sesión</h1>
+    <div className="LoginPage">
+      <Card>
+        <h1 className="LoginPage-title">Iniciar sesión</h1>
 
-      <label htmlFor="email">Email</label>
-      <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <form onSubmit={handleSubmit} className="LoginPage-form">
+          <Input
+            id="email"
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={submitting}
+          />
 
-      <label htmlFor="password">Contraseña</label>
-      <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <Input
+            id="password"
+            label="Contraseña"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={submitting}
+          />
 
-      {error && (
-        <p role="alert" style={{ color: 'red' }}>{error}</p>
-      )}
+          {error && <Alert tone="error">{error}</Alert>}
 
-      <button type="submit" disabled={submitting}>
-        {submitting ? 'Ingresando...' : 'Iniciar sesión'}
-      </button>
-    </form>
+          <Button type="submit" loading={submitting}>
+            Iniciar sesión
+          </Button>
+        </form>
+      </Card>
+    </div>
   )
 }

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { Alert, Badge, Button, Card, Input, PageHeader, Spinner } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { productsApi } from '../products/productsApi'
 import { movementsApi } from './movementsApi'
+import './movement-form-page.css'
 
 // Formulario de movimientos: una sola página para entrada y salida.
 // El contrato del backend exige quantity > 0 y reason; el stock no se
@@ -16,14 +18,26 @@ export function MovementFormPage() {
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
     productsApi
       .getById(id!)
-      .then(setProduct)
-      .catch((err: unknown) =>
-        setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor'),
-      )
+      .then((p) => {
+        if (!cancelled) setProduct(p)
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [id])
 
   async function register(type: 'IN' | 'OUT') {
@@ -39,57 +53,88 @@ export function MovementFormPage() {
     }
   }
 
-  if (error && !product) return <p role="alert">{error}</p>
-  if (!product) return <p>Cargando...</p>
+  if (loading) {
+    return (
+      <>
+        <PageHeader title="Registrar movimiento" />
+        <Spinner label="Cargando producto" />
+      </>
+    )
+  }
+
+  if (error && !product) {
+    return (
+      <>
+        <PageHeader title="Registrar movimiento" />
+        <Alert tone="error">{error}</Alert>
+      </>
+    )
+  }
+
+  if (!product) return null
 
   return (
     <>
-      <h1>Registrar movimiento</h1>
+      <PageHeader title="Registrar movimiento" description="Entrada o salida de stock del producto" />
 
-      <section style={{ marginBottom: '1rem' }}>
-        <strong>{product.name}</strong>
-        <div>{product.sku}</div>
-        <div>
-          Stock actual: {product.stock} {product.stock <= product.minStock && <strong>(stock bajo)</strong>}
-          {!product.active && <span style={{ opacity: 0.6 }}> (inactivo)</span>}
-        </div>
-      </section>
+      <Card className="MovementForm-card">
+        <section className="MovementForm-product">
+          <strong>{product.name}</strong>
+          <span className="MovementForm-sku">{product.sku}</span>
+          <span className="MovementForm-stock">
+            <span>Stock actual: {product.stock}</span>
+            {product.stock <= product.minStock && <Badge tone="warning">Stock bajo</Badge>}
+            {!product.active && <Badge tone="neutral">Inactivo</Badge>}
+          </span>
+        </section>
 
-      <form onSubmit={(e) => e.preventDefault()}>
-        <label htmlFor="quantity">Cantidad</label>
-        <input
-          id="quantity"
-          type="number"
-          min="1"
-          step="1"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          required
-        />
+        <form onSubmit={(e) => e.preventDefault()} className="MovementForm-form">
+          <Input
+            id="quantity"
+            label="Cantidad"
+            type="number"
+            min={1}
+            step={1}
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            required
+          />
 
-        <label htmlFor="reason">Motivo</label>
-        <input
-          id="reason"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          required
-        />
+          <Input
+            id="reason"
+            label="Motivo"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            required
+          />
 
-        {error && (
-          <p role="alert" style={{ color: 'red' }}>{error}</p>
-        )}
+          {error && <Alert tone="error">{error}</Alert>}
 
-        {/* Ambos contratos son siempre visibles: el server decide si la
-            operación es válida (stock suficiente, producto activo). */}
-        <button type="button" disabled={submitting || quantity === ''} onClick={() => register('IN')}>
-          {submitting ? '...' : 'Registrar entrada'}
-        </button>
-        <button type="button" disabled={submitting || quantity === ''} onClick={() => register('OUT')}>
-          {submitting ? '...' : 'Registrar salida'}
-        </button>
-
-        <Link to="/products">Cancelar</Link>
-      </form>
+          {/* Ambos contratos son siempre visibles: el server decide si la
+              operación es válida (stock suficiente, producto activo). */}
+          <div className="MovementForm-actions">
+            <Button
+              variant="secondary"
+              loading={submitting}
+              disabled={quantity === ''}
+              onClick={() => register('IN')}
+            >
+              Registrar entrada
+            </Button>
+            <Button
+              variant="danger"
+              loading={submitting}
+              disabled={quantity === ''}
+              onClick={() => register('OUT')}
+            >
+              Registrar salida
+            </Button>
+            <Link to="/products">
+              <Button variant="ghost">Cancelar</Button>
+            </Link>
+          </div>
+        </form>
+      </Card>
     </>
   )
 }

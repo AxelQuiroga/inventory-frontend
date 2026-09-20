@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
+import { Alert, Badge, Card, PageHeader, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { productsApi, type Product } from '../products/productsApi'
+import './dashboard-page.css'
+
+interface Totals {
+  total: number
+  lowStock: number
+  stock: number
+}
 
 export function DashboardPage() {
   const [recent, setRecent] = useState<Product[] | null>(null)
-  const [totals, setTotals] = useState<{ total: number; lowStock: number; stock: number } | null>(null)
+  const [totals, setTotals] = useState<Totals | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -13,8 +21,8 @@ export function DashboardPage() {
     //  - total de productos (activos): GET /products?limit=1000 → array.length
     //    (limitación: sin metadata de paginación en el contrato, válido hasta 1000)
     //  - stock bajo: GET /products?lowStock=true → array.length
-    //  - stock total: suma del mismo listado (el KPI "movimientos" no existe
-    //    aún en la API: GET /movements es global-only-pendiente; se informa).
+    //  - stock total: suma del mismo listado (el KPI "movimientos" requiere
+    //    GET /movements global que el backend aún no expone; se informa).
     const all = productsApi.list({ limit: 1000 })
     const low = productsApi.list({ lowStock: true })
 
@@ -25,7 +33,6 @@ export function DashboardPage() {
           lowStock: lowList.length,
           stock: allList.reduce((sum, p) => sum + p.stock, 0),
         })
-        // Recientes: primeros 5 del listado por createdAt desc (orden default del server)
         setRecent(allList.slice(0, 5))
       })
       .catch((err: unknown) =>
@@ -33,59 +40,58 @@ export function DashboardPage() {
       )
   }, [])
 
-  if (error) return <p role="alert">{error}</p>
-  if (!totals || !recent) return <p>Cargando...</p>
+  if (error) return <Alert tone="error">{error}</Alert>
+  if (!totals || !recent) return <Spinner label="Cargando dashboard" />
 
   return (
     <>
-      <h1>Dashboard</h1>
+      <PageHeader title="Dashboard" description="Resumen general del inventario" />
 
-      <section style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-        <Kpi label="Total de productos" value={totals.total} to="/products" />
-        <Kpi label="Stock bajo" value={totals.lowStock} to="/products?lowStock=true" />
-        <Kpi label="Stock total" value={totals.stock} />
+      <section className="Dashboard-kpis">
+        <Link to="/products" className="Dashboard-kpiLink">
+          <Card>
+            <div className="Dashboard-kpiValue">{totals.total}</div>
+            <div className="Dashboard-kpiLabel">Total de productos</div>
+          </Card>
+        </Link>
+        <Link to="/products?lowStock=true" className="Dashboard-kpiLink">
+          <Card>
+            <div className="Dashboard-kpiValue">{totals.lowStock}</div>
+            <div className="Dashboard-kpiLabel">Stock bajo</div>
+          </Card>
+        </Link>
+        <Card>
+          <div className="Dashboard-kpiValue">{totals.stock}</div>
+          <div className="Dashboard-kpiLabel">Stock total</div>
+        </Card>
       </section>
 
-      <h2>
-        Productos recientes{' '}
-        <Link to="/products" style={{ fontSize: '0.85rem' }}>
-          ver todos
-        </Link>
-      </h2>
-      <table>
-        <thead>
-          <tr>
-            <th>SKU</th>
-            <th>Producto</th>
-            <th>Stock</th>
-          </tr>
-        </thead>
-        <tbody>
-          {recent.map((p) => (
-            <tr key={p.id}>
-              <td>{p.sku}</td>
-              <td>{p.name}</td>
-              <td>{p.stock}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </>
-  )
-}
+      <PageHeader title="Productos recientes" action={<Link to="/products">ver todos</Link>} />
 
-function Kpi({ label, value, to }: { label: string; value: number; to?: string }) {
-  const content = (
-    <>
-      <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{value}</div>
-      <div>{label}</div>
+      {recent.length === 0 ? (
+        <p>No hay productos registrados.</p>
+      ) : (
+        <Table>
+          <Table.Head>
+            <Table.Row>
+              <Table.Th>SKU</Table.Th>
+              <Table.Th>Producto</Table.Th>
+              <Table.Th>Stock</Table.Th>
+            </Table.Row>
+          </Table.Head>
+          <Table.Body>
+            {recent.map((p) => (
+              <Table.Row key={p.id}>
+                <Table.Td>{p.sku}</Table.Td>
+                <Table.Td>{p.name}</Table.Td>
+                <Table.Td align="right">
+                  {p.stock} {p.stock <= p.minStock && <Badge tone="warning">Stock bajo</Badge>}
+                </Table.Td>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
+      )}
     </>
-  )
-  return to ? (
-    <Link to={to} style={{ border: '1px solid #ddd', padding: '1rem', minWidth: '160px' }}>
-      {content}
-    </Link>
-  ) : (
-    <div style={{ border: '1px solid #ddd', padding: '1rem', minWidth: '160px' }}>{content}</div>
   )
 }

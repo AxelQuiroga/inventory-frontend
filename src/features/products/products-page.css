@@ -1,0 +1,27 @@
+.Products-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.Products-filters .Input-wrapper {
+  min-width: 220px;
+}
+
+.Products-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  cursor: pointer;
+}
+
+.Products-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}

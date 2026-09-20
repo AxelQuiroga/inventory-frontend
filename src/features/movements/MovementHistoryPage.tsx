@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
+import { Alert, Badge, Card, EmptyState, PageHeader, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { productsApi, type Product } from '../products/productsApi'
 import { movementsApi, type Movement } from './movementsApi'
+import './movement-history-page.css'
 
 // Historial por producto: lectura para cualquier rol autenticado.
 // El server devuelve los movimientos más-reciente-primero y conserva el
@@ -17,57 +19,81 @@ export function MovementHistoryPage() {
 
   useEffect(() => {
     if (!productId) return
+    let cancelled = false
     Promise.all([productsApi.getById(productId), movementsApi.history(productId)])
       .then(([p, movements]) => {
+        if (cancelled) return
         setProduct(p)
         setHistory(movements)
       })
-      .catch((err: unknown) =>
-        setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor'),
-      )
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor')
+        }
+      })
+    return () => {
+      cancelled = true
+    }
   }, [productId])
 
-  if (error) return <p role="alert">{error}</p>
-  if (!product || !history) return <p>Cargando...</p>
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Historial de movimientos" />
+        <Alert tone="error">{error}</Alert>
+      </>
+    )
+  }
+
+  if (!product || !history) return <Spinner label="Cargando historial" />
 
   return (
     <>
-      <h1>Historial de movimientos</h1>
+      <PageHeader title="Historial de movimientos" />
 
-      <section style={{ marginBottom: '1rem' }}>
+      <Card className="History-product">
         <strong>{product.name}</strong>
-        <div>{product.sku}</div>
-        <div>Stock actual: {product.stock}</div>
-      </section>
+        <span>{product.sku}</span>
+        <span>Stock actual: {product.stock}</span>
+      </Card>
 
       {history.length === 0 ? (
-        <p>Sin movimientos registrados</p>
+        <EmptyState
+          title="Sin movimientos registrados"
+          description="Cuando se registren entradas o salidas de este producto, van a aparecer acá."
+        />
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Tipo</th>
-              <th>Cantidad</th>
-              <th>Motivo</th>
-              <th>Usuario</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <Table.Head>
+            <Table.Row>
+              <Table.Th>Fecha</Table.Th>
+              <Table.Th>Tipo</Table.Th>
+              <Table.Th>Cantidad</Table.Th>
+              <Table.Th>Motivo</Table.Th>
+              <Table.Th>Usuario</Table.Th>
+            </Table.Row>
+          </Table.Head>
+          <Table.Body>
             {history.map((m) => (
-              <tr key={m.id}>
-                <td>{new Date(m.createdAt).toLocaleString()}</td>
-                <td>{m.type === 'IN' ? 'Entrada' : 'Salida'}</td>
-                <td>{m.quantity}</td>
-                <td>{m.reason}</td>
-                <td>{m.userId}</td>
-              </tr>
+              <Table.Row key={m.id}>
+                <Table.Td>{new Date(m.createdAt).toLocaleString()}</Table.Td>
+                <Table.Td>
+                  <Badge tone={m.type === 'IN' ? 'success' : 'info'}>
+                    {m.type === 'IN' ? 'Entrada' : 'Salida'}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>{m.quantity}</Table.Td>
+                <Table.Td>{m.reason}</Table.Td>
+                <Table.Td>{m.userId}</Table.Td>
+              </Table.Row>
             ))}
-          </tbody>
-        </table>
+          </Table.Body>
+        </Table>
       )}
 
-      <Link to="/products">Volver a productos</Link>
+      <Link to="/products" className="History-back">
+        Volver a productos
+      </Link>
     </>
   )
 }

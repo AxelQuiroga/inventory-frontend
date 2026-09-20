@@ -1,0 +1,25 @@
+.Dashboard-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.Dashboard-kpiLink {
+  text-decoration: none;
+}
+.Dashboard-kpiLink:hover {
+  text-decoration: none;
+}
+
+.Dashboard-kpiValue {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.Dashboard-kpiLabel {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  margin-top: var(--space-1);
+}

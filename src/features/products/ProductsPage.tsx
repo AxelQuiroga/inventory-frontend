@@ -1,44 +1,74 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { Alert, Badge, Button, EmptyState, Input, PageHeader, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { getSessionUser } from '../auth/session'
-import { productsApi, type Product } from './productsApi'
+import { productsApi, type Product, type ListProductsParams } from './productsApi'
+import './products-page.css'
 
-export function ProductsPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
+// RBAC visible, leído en cada render: la sesión vive en el token persistido.
+//  - escritura de productos: ADMIN (create/update/deactivate/reactivate)
+//  - movimientos de stock: ADMIN + OPERATOR (matriz del backend)
+function usePermissions() {
+  const role = getSessionUser()?.role
+  return {
+    isAdmin: role === 'ADMIN',
+    canMoveStock: role === 'ADMIN' || role === 'OPERATOR',
+  }
+}
+
+// Carga de productos aislada del effect: el effect solo sincroniza con la
+// URL (sistema externo), la función es reutilizable por filtros y acciones.
+function useProductList(searchParams: URLSearchParams) {
   const [products, setProducts] = useState<Product[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState(searchParams.get('search') ?? '')
-  const [busyId, setBusyId] = useState<string | null>(null)
-
-  // RBAC visible, leído en cada render: la sesión vive en el token
-  // persistido y la página se monta después del login.
-  //  - escritura de productos: ADMIN (create/update/deactivate/reactivate)
-  //  - movimientos de stock: ADMIN + OPERATOR (matriz del backend)
-  const role = getSessionUser()?.role
-  const isAdmin = role === 'ADMIN'
-  const canMoveStock = role === 'ADMIN' || role === 'OPERATOR'
 
   const load = useCallback(async () => {
     setError(null)
     try {
-      const params = Object.fromEntries(searchParams.entries())
-      setProducts(await productsApi.list(params))
+      const params = Object.fromEntries(searchParams.entries()) as ListProductsParams
+      const list = await productsApi.list(params)
+      setProducts(list) // setState en callback async: fuera del render, sin warning
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor')
     }
   }, [searchParams])
 
   useEffect(() => {
-    void load()
-  }, [load])
+    let cancelled = false
+    void (async () => {
+      setError(null)
+      try {
+        const params = Object.fromEntries(searchParams.entries()) as ListProductsParams
+        const list = await productsApi.list(params)
+        if (!cancelled) setProducts(list)
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor')
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [searchParams])
+
+  return { products, error, setError, refresh: load }
+}
+
+export function ProductsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { products, error, setError, refresh } = useProductList(searchParams)
+  const [search, setSearch] = useState(searchParams.get('search') ?? '')
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const { isAdmin, canMoveStock } = usePermissions()
 
   async function setActive(product: Product, active: boolean) {
     setBusyId(product.id)
     setError(null)
     try {
       await productsApi.setActive(product.id, active)
-      await load() // refresco desde el server: la UI nunca inventa estado
+      await refresh() // refresco desde el server: la UI nunca inventa estado
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor')
     } finally {
@@ -55,23 +85,29 @@ export function ProductsPage() {
     setSearchParams(merged)
   }
 
+  const isEmpty = products !== null && products.length === 0
+
   return (
     <>
-      <h1>Productos</h1>
+      <PageHeader
+        title="Productos"
+        description="Gestioná los productos del inventario"
+        action={isAdmin ? <Link to="/products/new"><Button>Nuevo producto</Button></Link> : undefined}
+      />
 
-      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
-        <label htmlFor="search">Buscar</label>
-        <input
+      <div className="Products-filters">
+        <Input
           id="search"
+          label="Buscar"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && applyFilter({ search })}
         />
-        <button type="button" onClick={() => applyFilter({ search })}>
+        <Button variant="secondary" onClick={() => applyFilter({ search })}>
           Buscar
-        </button>
+        </Button>
 
-        <label>
+        <label className="Products-check">
           <input
             type="checkbox"
             checked={searchParams.get('lowStock') === 'true'}
@@ -82,7 +118,7 @@ export function ProductsPage() {
 
         {/* includeInactive es ADMIN-only en el backend */}
         {isAdmin && (
-          <label>
+          <label className="Products-check">
             <input
               type="checkbox"
               checked={searchParams.get('includeInactive') === 'true'}
@@ -91,85 +127,76 @@ export function ProductsPage() {
             Ver inactivos
           </label>
         )}
-
-        {isAdmin && (
-          <Link to="/products/new" style={{ marginLeft: 'auto' }}>
-            + Nuevo producto
-          </Link>
-        )}
       </div>
 
-      {error && (
-        <p role="alert" style={{ color: 'red' }}>{error}</p>
+      {error && <Alert tone="error">{error}</Alert>}
+
+      {products === null && !error && <Spinner label="Cargando productos" />}
+
+      {isEmpty && (
+        <EmptyState
+          title="No hay productos"
+          description={search || searchParams.toString() ? 'Probá ajustar los filtros de búsqueda.' : 'Creá el primer producto para empezar.'}
+          action={isAdmin ? <Link to="/products/new"><Button variant="secondary">Nuevo producto</Button></Link> : undefined}
+        />
       )}
 
-      {!products && !error && <p>Cargando...</p>}
-
-      {products && products.length === 0 && <p>No hay productos</p>}
-
-      {products && products.length > 0 && (
-        <table>
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>Producto</th>
-              <th>Stock</th>
-              <th>Precio</th>
-              <th>Historial</th>
-              {canMoveStock && <th>Movimientos</th>}
-              {isAdmin && <th>Acciones</th>}
-            </tr>
-          </thead>
-          <tbody>
+      {products !== null && products.length > 0 && (
+        <Table>
+          <Table.Head>
+            <Table.Row>
+              <Table.Th>SKU</Table.Th>
+              <Table.Th>Producto</Table.Th>
+              <Table.Th>Stock</Table.Th>
+              <Table.Th>Precio</Table.Th>
+              <Table.Th>Historial</Table.Th>
+              {canMoveStock && <Table.Th>Movimientos</Table.Th>}
+              {isAdmin && <Table.Th>Acciones</Table.Th>}
+            </Table.Row>
+          </Table.Head>
+          <Table.Body>
             {products.map((p) => (
-              <tr key={p.id}>
-                <td>{p.sku}</td>
-                <td>
-                  {p.name}
-                  {!p.active && (
-                    <span style={{ marginLeft: '0.5rem', opacity: 0.6 }}>(inactivo)</span>
-                  )}
-                </td>
-                <td>
-                  {p.stock} {p.stock <= p.minStock && <strong>(stock bajo)</strong>}
-                </td>
-                <td>{p.price}</td>
+              <Table.Row key={p.id}>
+                <Table.Td>{p.sku}</Table.Td>
+                <Table.Td>
+                  {p.name} {!p.active && <Badge tone="neutral">Inactivo</Badge>}
+                </Table.Td>
+                <Table.Td>
+                  {p.stock} {p.stock <= p.minStock && <Badge tone="warning">Stock bajo</Badge>}
+                </Table.Td>
+                <Table.Td align="right">{p.price}</Table.Td>
                 {/* Lectura: cualquier rol autenticado */}
-                <td>
+                <Table.Td>
                   <Link to={`/products/${p.id}/history`}>Historial</Link>
-                </td>
+                </Table.Td>
                 {canMoveStock && (
-                  <td style={{ display: 'flex', gap: '0.5rem' }}>
-                    <Link to={`/products/${p.id}/movement`}>Entrada</Link>
-                    <Link to={`/products/${p.id}/movement`}>Salida</Link>
-                  </td>
+                  <Table.Td>
+                    <div className="Products-actions">
+                      <Link to={`/products/${p.id}/movement`}>Entrada</Link>
+                      <Link to={`/products/${p.id}/movement`}>Salida</Link>
+                    </div>
+                  </Table.Td>
                 )}
                 {isAdmin && (
-                  <td style={{ display: 'flex', gap: '0.5rem' }}>
-                    <Link to={`/products/${p.id}/edit`}>Editar</Link>
-                    {p.active ? (
-                      <button
-                        type="button"
-                        disabled={busyId === p.id}
-                        onClick={() => setActive(p, false)}
-                      >
-                        {busyId === p.id ? '...' : 'Desactivar'}
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={busyId === p.id}
-                        onClick={() => setActive(p, true)}
-                      >
-                        {busyId === p.id ? '...' : 'Reactivar'}
-                      </button>
-                    )}
-                  </td>
+                  <Table.Td>
+                    <div className="Products-actions">
+                      <Link to={`/products/${p.id}/edit`}>Editar</Link>
+                      {p.active ? (
+                        <Button variant="danger" loading={busyId === p.id} onClick={() => setActive(p, false)}>
+                          Desactivar
+                        </Button>
+                      ) : (
+                        <Button variant="secondary" loading={busyId === p.id} onClick={() => setActive(p, true)}>
+                          Reactivar
+                        </Button>
+                      )}
+                    </div>
+                  </Table.Td>
                 )}
-              </tr>
+              </Table.Row>
             ))}
-          </tbody>
-        </table>
+          </Table.Body>
+        </Table>
       )}
     </>
   )

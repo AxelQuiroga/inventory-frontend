@@ -1,0 +1,37 @@
+.MovementForm-card {
+  max-width: 560px;
+}
+
+.MovementForm-product {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-4);
+}
+
+.MovementForm-sku {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.MovementForm-stock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-md);
+}
+
+.MovementForm-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.MovementForm-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}

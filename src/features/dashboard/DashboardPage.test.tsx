@@ -36,7 +36,9 @@ describe('DashboardPage', () => {
     expect(screen.getByText('2')).toBeInTheDocument() // stock bajo (server: stock <= minStock)
     expect(screen.getByText('513')).toBeInTheDocument() // stock total (suma)
     expect(screen.getByText('Total de productos')).toBeInTheDocument()
-    expect(screen.getByText('Stock bajo')).toBeInTheDocument()
+    // El KPI de stock bajo es un link al listado filtrado (el Badge del mismo
+    // nombre vive en la tabla de recientes, por eso se busca por rol)
+    expect(screen.getByRole('link', { name: /stock bajo/i })).toBeInTheDocument()
     expect(screen.getByText('Stock total')).toBeInTheDocument()
   })
 
