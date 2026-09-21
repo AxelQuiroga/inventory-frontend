@@ -1,0 +1,9 @@
+.Sales-detailMeta {
+  color: var(--color-text-muted);
+  margin-top: 0;
+}
+
+.Sales-detailTotal {
+  font-size: var(--font-size-lg);
+  margin-top: var(--space-4);
+}

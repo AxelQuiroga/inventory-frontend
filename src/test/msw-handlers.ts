@@ -65,4 +65,75 @@ export const productsHandlers: HttpHandler[] = [
   }),
 ]
 
-export const allHandlers = [...loginHandlers, ...productsHandlers]
+// Réplica del servidor de ventas: congela el precio ACTUAL del producto y
+// valida stock por línea. Devuelve la venta tipo-como-el-backend (el total
+// va derivado de las líneas). No muta testProducts: cada test arranca limpio.
+export const salesHandlers: HttpHandler[] = [
+  http.post('*/sales', async ({ request }) => {
+    const body = (await request.json()) as { items: { productId: string; quantity: number }[] }
+
+    const items = body.items.map((line) => {
+      const product = testProducts.find((p) => p.id === line.productId)
+      if (!product) {
+        throw HttpResponse.json({ message: 'Product not found' }, { status: 404 })
+      }
+      return { product, quantity: line.quantity }
+    })
+
+    // Misma regla que el backend: si CUALQUIER línea no alcanza, 400
+    for (const { product, quantity } of items) {
+      if (quantity > product.stock) {
+        return HttpResponse.json({ message: 'Insufficient stock' }, { status: 400 })
+      }
+    }
+
+    const saleItems = items.map(({ product, quantity }, index) => ({
+      id: `sale-item-${index}`,
+      saleId: 'sale-1',
+      productId: product.id,
+      productName: product.name,
+      productSku: product.sku,
+      quantity,
+      unitPrice: product.price,
+      total: product.price * quantity,
+    }))
+
+    return HttpResponse.json(
+      {
+        id: 'sale-1',
+        userId: 'user-admin',
+        items: saleItems,
+        total: saleItems.reduce((sum, item) => sum + item.total, 0),
+        createdAt: new Date().toISOString(),
+      },
+      { status: 201 },
+    )
+  }),
+
+  http.get('*/sales', () => {
+    return HttpResponse.json([
+      {
+        id: 'sale-1',
+        userId: 'user-admin',
+        itemCount: 2,
+        total: 124.5,
+        createdAt: '2026-09-21T14:00:00.000Z',
+      },
+    ])
+  }),
+
+  http.get('*/sales/:id', () => {
+    return HttpResponse.json({
+      id: 'sale-1',
+      userId: 'user-admin',
+      items: [
+        { id: 'si-1', saleId: 'sale-1', productId: 'p1', productName: 'Martillo', productSku: 'MAR-1', quantity: 2, unitPrice: 25.5, total: 51 },
+        { id: 'si-2', saleId: 'sale-1', productId: 'p2', productName: 'Taladro', productSku: 'TAL-1', quantity: 1, unitPrice: 99.99, total: 99.99 },
+      ],
+      total: 150.99,
+      createdAt: '2026-09-21T14:00:00.000Z',
+    })
+  }),
+]
+
+export const allHandlers = [...loginHandlers, ...productsHandlers, ...salesHandlers]

@@ -1,0 +1,134 @@
+.SaleForm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .SaleForm-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.SaleForm-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.SaleForm-title {
+  font-size: var(--font-size-lg);
+  margin: 0;
+}
+
+.SaleForm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.SaleForm-product {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+@media (max-width: 700px) {
+  .SaleForm-product {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.SaleForm-productInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.SaleForm-meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.SaleForm-add {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.SaleForm-add .Input {
+  width: 90px;
+}
+
+.SaleForm-cart {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.SaleForm-cartLine {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+@media (max-width: 700px) {
+  .SaleForm-cartLine {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.SaleForm-cartLineActions {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.SaleForm-cartLineActions .Input {
+  width: 90px;
+}
+
+.SaleForm-total {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-lg);
+}
+
+.SaleForm-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.SaleForm-hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.SaleForm-empty {
+  color: var(--color-text-muted);
+  margin: 0;
+}

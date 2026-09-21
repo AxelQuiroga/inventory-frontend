@@ -27,6 +27,9 @@ export function Layout() {
           <NavLink to="/products" className={({ isActive }) => `Layout-navLink${isActive ? ' Layout-navLink--active' : ''}`}>
             Productos
           </NavLink>
+          <NavLink to="/sales" className={({ isActive }) => `Layout-navLink${isActive ? ' Layout-navLink--active' : ''}`}>
+            Ventas
+          </NavLink>
           {disabledItems.map((label) => (
             <span key={label} className="Layout-navDisabled" title="Próximamente">
               {label}
