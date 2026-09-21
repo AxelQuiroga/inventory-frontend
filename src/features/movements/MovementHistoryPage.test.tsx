@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { http, HttpResponse } from 'msw'
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -13,6 +13,18 @@ const HISTORY = [
   { id: 'm2', productId: 'p1', userId: 'user-operator', type: 'OUT', quantity: 4, reason: 'Venta mostrador', createdAt: '2026-09-19T10:00:00Z' },
   { id: 'm1', productId: 'p1', userId: 'user-admin', type: 'IN', quantity: 30, reason: 'Compra a proveedor', createdAt: '2026-09-19T09:00:00Z' },
 ]
+
+// Más de un tamaño de página: fuerza la aparición de "Siguiente" y ejercita
+// page 1 (llena, 20) → page 2 (parcial, 2).
+const HISTORY_PAGED = Array.from({ length: 22 }, (_, i) => ({
+  id: `m-p${i + 1}`,
+  productId: 'p1',
+  userId: 'user-admin',
+  type: 'IN' as const,
+  quantity: i + 1,
+  reason: `Movimiento ${i + 1}`,
+  createdAt: `2026-09-19T10:00:${String(i).padStart(2, '0')}Z`,
+}))
 
 function renderAt(path = '/products/p1/history') {
   return render(
@@ -97,5 +109,49 @@ describe('MovementHistoryPage', () => {
     renderAt()
 
     expect(await screen.findByText('Martillo')).toBeInTheDocument()
+  })
+
+  it('pagina el historial: Siguiente y Anterior cambian de página', async () => {
+    const requestedPage: string[] = []
+    server.use(
+      http.get('*/movements/history/:productId', ({ request }) => {
+        const url = new URL(request.url)
+        requestedPage.push(url.searchParams.get('page') ?? '1')
+        const page = Number(url.searchParams.get('page') ?? 1)
+        const limit = Number(url.searchParams.get('limit') ?? 20)
+        return HttpResponse.json(HISTORY_PAGED.slice((page - 1) * limit, page * limit))
+      }),
+    )
+    renderAt()
+
+    // Página 1: los primeros 20, Anterior deshabilitado
+    expect(await screen.findByText('Movimiento 1')).toBeInTheDocument()
+    expect(screen.getByText('Página 1')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Anterior' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeEnabled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
+
+    // Página 2: los últimos 2; la página quedó parcial → Siguiente se deshabilita
+    expect(await screen.findByText('Movimiento 22')).toBeInTheDocument()
+    expect(screen.getByText('Página 2')).toBeInTheDocument()
+    expect(screen.queryByText('Movimiento 1')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeDisabled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Anterior' }))
+
+    expect(await screen.findByText('Movimiento 1')).toBeInTheDocument()
+    expect(screen.getByText('Página 1')).toBeInTheDocument()
+    expect(requestedPage).toEqual(['1', '2', '1'])
+  })
+
+  it('deshabilita Siguiente cuando la página trae menos del tamaño de página', async () => {
+    renderAt() // beforeEach: solo 2 movimientos
+
+    await screen.findByText('Venta mostrador')
+
+    expect(screen.getByText('Página 1')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Anterior' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeDisabled()
   })
 })

@@ -35,8 +35,13 @@ export const movementsApi = {
   },
 
   // Historial de un producto: lectura para cualquier rol autenticado.
-  // El server lo devuelve ordenado más-reciente-primero.
-  history(productId: string): Promise<Movement[]> {
-    return api(`/movements/history/${productId}`, { headers: authHeaders() })
+  // El server lo devuelve ordenado más-reciente-primero y pagina con
+  // page/limit (defaults 1/20; limit máx 100).
+  history(productId: string, params: { page?: number; limit?: number } = {}): Promise<Movement[]> {
+    const query = new URLSearchParams()
+    if (params.page !== undefined) query.set('page', String(params.page))
+    if (params.limit !== undefined) query.set('limit', String(params.limit))
+    const qs = query.toString()
+    return api(`/movements/history/${productId}${qs ? `?${qs}` : ''}`, { headers: authHeaders() })
   },
 }

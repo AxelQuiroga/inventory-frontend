@@ -11,3 +11,15 @@
   margin-top: var(--space-4);
   color: var(--color-primary);
 }
+
+.History-pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.History-page-indicator {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
