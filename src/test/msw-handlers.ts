@@ -45,6 +45,17 @@ export const productsHandlers: HttpHandler[] = [
       result = result.filter((p) => p.stock <= p.minStock)
     }
 
+    const sortBy = url.searchParams.get('sortBy')
+    const order = url.searchParams.get('order') ?? 'asc'
+    if (sortBy === 'name' || sortBy === 'price' || sortBy === 'stock') {
+      // Réplica del buildOrder del backend (columnMap name/price/stock/createdAt)
+      const dir = order === 'desc' ? -1 : 1
+      result = [...result].sort((a, b) => {
+        if (sortBy === 'name') return a.name.localeCompare(b.name) * dir
+        return (a[sortBy] - b[sortBy]) * dir
+      })
+    }
+
     const limit = url.searchParams.get('limit')
     if (limit) {
       result = result.slice(0, Number(limit))

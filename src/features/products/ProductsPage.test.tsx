@@ -124,6 +124,113 @@ describe('ProductsPage — búsqueda y filtros (query real del backend)', () => 
   })
 })
 
+describe('ProductsPage — ordenamiento por columnas (sortBy/order del backend)', () => {
+  it('click en Stock ordena asc y recarga con ?sortBy=stock&order=asc', async () => {
+    const user = userEvent.setup()
+    let capturedUrl = ''
+    server.use(
+      http.get('*/products', ({ request }) => {
+        capturedUrl = request.url
+        const url = new URL(request.url)
+        if (url.searchParams.get('sortBy') === 'stock') {
+          const sorted = [...testProducts].sort((a, b) => a.stock - b.stock)
+          return HttpResponse.json(url.searchParams.get('order') === 'desc' ? sorted.reverse() : sorted)
+        }
+        return HttpResponse.json(testProducts)
+      }),
+    )
+    renderPage()
+
+    // Carga inicial: orden original del server (Martillo primero)
+    await screen.findByText('Martillo')
+    expect(screen.getAllByRole('row')[1]!.textContent).toContain('MAR-1')
+
+    await user.click(screen.getByRole('button', { name: /ordenar por stock/i }))
+
+    await waitFor(() => expect(capturedUrl).toContain('sortBy=stock'))
+    expect(capturedUrl).toContain('order=asc')
+
+    // El server "ordenó": Tornillos (stock 0) primero
+    expect(screen.getAllByRole('row')[1]!.textContent).toContain('TOR-1')
+    // Indicador de dirección asc visible
+    expect(screen.getByRole('button', { name: /ordenar por stock/i }).textContent).toContain('↑')
+  })
+
+  it('segundo click en la misma columna invierte a desc', async () => {
+    const user = userEvent.setup()
+    let capturedUrl = ''
+    server.use(
+      http.get('*/products', ({ request }) => {
+        capturedUrl = request.url
+        const url = new URL(request.url)
+        if (url.searchParams.get('sortBy') === 'stock') {
+          const sorted = [...testProducts].sort((a, b) => a.stock - b.stock)
+          return HttpResponse.json(url.searchParams.get('order') === 'desc' ? sorted.reverse() : sorted)
+        }
+        return HttpResponse.json(testProducts)
+      }),
+    )
+    renderPage()
+
+    await screen.findByText('Martillo')
+    const stockHeader = screen.getByRole('button', { name: /ordenar por stock/i })
+
+    await user.click(stockHeader)
+    await waitFor(() => expect(capturedUrl).toContain('order=asc'))
+    expect(stockHeader.textContent).toContain('↑')
+
+    await user.click(screen.getByRole('button', { name: /ordenar por stock/i }))
+
+    await waitFor(() => expect(capturedUrl).toContain('order=desc'))
+    // Invertido: Pintura (stock 390) primero
+    expect(screen.getAllByRole('row')[1]!.textContent).toContain('PIE-1')
+    expect(screen.getByRole('button', { name: /ordenar por stock/i }).textContent).toContain('↓')
+  })
+
+  it('click en otra columna cambia el campo y vuelve a asc', async () => {
+    const user = userEvent.setup()
+    const requested: string[] = []
+    server.use(
+      http.get('*/products', ({ request }) => {
+        requested.push(new URL(request.url).search)
+        return HttpResponse.json(testProducts)
+      }),
+    )
+    renderPage()
+
+    await screen.findByText('Martillo')
+    await user.click(screen.getByRole('button', { name: /ordenar por stock/i }))
+    await waitFor(() => expect(requested[requested.length - 1]).toContain('sortBy=stock'))
+
+    await user.click(screen.getByRole('button', { name: /ordenar por precio/i }))
+
+    await waitFor(() => expect(requested[requested.length - 1]).toContain('sortBy=price'))
+    expect(requested[requested.length - 1]).toContain('order=asc')
+  })
+
+  it('el filtro stock bajo se mantiene al ordenar (la URL es la fuente de verdad)', async () => {
+    const user = userEvent.setup()
+    let capturedUrl = ''
+    server.use(
+      http.get('*/products', ({ request }) => {
+        capturedUrl = request.url
+        return HttpResponse.json(testProducts)
+      }),
+    )
+    renderPage()
+    await screen.findByText('Martillo')
+
+    await user.click(screen.getByRole('checkbox', { name: /solo stock bajo/i }))
+    await waitFor(() => expect(capturedUrl).toContain('lowStock=true'))
+
+    await user.click(screen.getByRole('button', { name: /ordenar por precio/i }))
+
+    await waitFor(() => expect(capturedUrl).toContain('sortBy=price'))
+    expect(capturedUrl).toContain('order=asc')
+    expect(capturedUrl).toContain('lowStock=true') // el filtro no se pierde
+  })
+})
+
 describe('ProductsPage — RBAC visible', () => {
   it('ADMIN ve link Nuevo producto, Editar y Desactivar/Reactivar', async () => {
     renderPage()

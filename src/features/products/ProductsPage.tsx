@@ -103,6 +103,23 @@ export function ProductsPage() {
     setSearchParams(merged)
   }
 
+  // Ordenamiento por columnas visibles. SKU y createdAt NO se exponen: la
+  // whitelist del backend es name|price|stock|createdAt y la tabla no
+  // muestra createdAt.
+  type SortField = 'name' | 'price' | 'stock'
+
+  function toggleSort(field: SortField) {
+    const current = searchParams.get('sortBy')
+    // Mismo campo → toggle asc/desc; campo nuevo → empieza en asc.
+    const order = current === field && searchParams.get('order') !== 'desc' ? 'desc' : 'asc'
+    applyFilter({ sortBy: field, order })
+  }
+
+  function sortIndicator(field: SortField) {
+    if (searchParams.get('sortBy') !== field) return null
+    return searchParams.get('order') === 'desc' ? ' ↓' : ' ↑'
+  }
+
   const isEmpty = products !== null && products.length === 0
 
   return (
@@ -165,9 +182,36 @@ export function ProductsPage() {
           <Table.Head>
             <Table.Row>
               <Table.Th>SKU</Table.Th>
-              <Table.Th>Producto</Table.Th>
-              <Table.Th>Stock</Table.Th>
-              <Table.Th>Precio</Table.Th>
+              <Table.Th>
+                <button
+                  type="button"
+                  className="Products-sort"
+                  aria-label="Ordenar por Producto"
+                  onClick={() => toggleSort('name')}
+                >
+                  Producto{sortIndicator('name')}
+                </button>
+              </Table.Th>
+              <Table.Th>
+                <button
+                  type="button"
+                  className="Products-sort"
+                  aria-label="Ordenar por Stock"
+                  onClick={() => toggleSort('stock')}
+                >
+                  Stock{sortIndicator('stock')}
+                </button>
+              </Table.Th>
+              <Table.Th>
+                <button
+                  type="button"
+                  className="Products-sort"
+                  aria-label="Ordenar por Precio"
+                  onClick={() => toggleSort('price')}
+                >
+                  Precio{sortIndicator('price')}
+                </button>
+              </Table.Th>
               <Table.Th>Historial</Table.Th>
               {canMoveStock && <Table.Th>Movimientos</Table.Th>}
               {isAdmin && <Table.Th>Acciones</Table.Th>}

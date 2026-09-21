@@ -18,6 +18,10 @@ export interface ListProductsParams {
   category?: string
   lowStock?: boolean
   includeInactive?: boolean
+  // Ordenamiento respetando la whitelist del backend (buildOrder):
+  // name|price|stock|createdAt, order asc|desc.
+  sortBy?: 'name' | 'price' | 'stock' | 'createdAt'
+  order?: 'asc' | 'desc'
   limit?: number
   page?: number
 }
@@ -50,6 +54,8 @@ export const productsApi = {
     if (params.includeInactive) query.set('includeInactive', 'true')
     if (params.limit !== undefined) query.set('limit', String(params.limit))
     if (params.page !== undefined) query.set('page', String(params.page))
+    if (params.sortBy) query.set('sortBy', params.sortBy)
+    if (params.order) query.set('order', params.order)
 
     const qs = query.toString()
     return api(`/products${qs ? `?${qs}` : ''}`, { headers: authHeaders() })
