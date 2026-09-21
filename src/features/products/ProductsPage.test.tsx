@@ -1,6 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { useEffect } from 'react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { http, HttpResponse } from 'msw'
 import { describe, it, expect, beforeEach } from 'vitest'
 
@@ -194,7 +195,7 @@ describe('ProductsPage — RBAC visible', () => {
 })
 
 describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {
-  it('Desactivar llama al contrato y la fila pasa a inactivo', async () => {
+  it('Desactivar pide confirmación con contexto y al confirmar ejecuta el contrato', async () => {
     const user = userEvent.setup()
     let deactivateCalled = false
     // El mock simula el estado real del server: el POST muta lo que devuelve el GET
@@ -211,9 +212,37 @@ describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {
 
     await user.click(await screen.findByRole('button', { name: /desactivar/i }))
 
+    // El diálogo aparece con el producto en contexto y aún NO desactiva
+    expect(deactivateCalled).toBe(false)
+    const dialog = screen.getByRole('dialog', { name: /desactivar producto/i })
+    expect(dialog).toBeInTheDocument()
+    expect(dialog.textContent).toMatch(/MAR-1/) // contexto: el producto correcto
+
+    await user.click(within(dialog).getByRole('button', { name: /desactivar/i }))
+
     await waitFor(() => expect(deactivateCalled).toBe(true))
-    // Tras la acción y el refetch, la fila muestra botón Reactivar
     expect(await screen.findByRole('button', { name: /reactivar/i })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('cancelar la confirmación cierra el diálogo sin desactivar', async () => {
+    const user = userEvent.setup()
+    let deactivateCalled = false
+    server.use(
+      http.post('*/products/:id/deactivate', () => {
+        deactivateCalled = true
+        return HttpResponse.json({})
+      }),
+    )
+    renderPage()
+
+    // El listado default trae varias filas: tomo el primer botón de fila
+    await user.click((await screen.findAllByRole('button', { name: /desactivar/i }))[0]!)
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: /cancelar/i }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(deactivateCalled).toBe(false)
   })
 
   it('Reactivar llama al contrato y la fila vuelve a activo', async () => {
@@ -236,6 +265,32 @@ describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {
     expect(await screen.findByRole('button', { name: /desactivar/i })).toBeInTheDocument()
   })
 
+  it('consume el mensaje de éxito post/redirect y no lo repite al refrescar', async () => {
+    // Simula volver de un formulario que navegó con state.success.
+    // LocationProbe expone el estado real del router (window.history es
+    // null con MemoryRouter).
+    let probe: { pathname: string; state: unknown } | null = null
+    function LocationProbe() {
+      const location = useLocation()
+      useEffect(() => {
+        probe = { pathname: location.pathname, state: location.state }
+      }, [location])
+      return null
+    }
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/products', state: { success: 'Producto creado' } }]}>
+        <LocationProbe />
+        <Routes>
+          <Route path="/products" element={<ProductsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Producto creado')
+    // El estado se limpió vía replace: la location actual ya no lo lleva
+    await waitFor(() => expect(probe?.state).toBeNull())
+  })
+
   it('si la API rechaza (403), el error queda visible', async () => {
     const user = userEvent.setup()
     renderPage()
@@ -247,6 +302,9 @@ describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {
       ),
     )
     await user.click((await screen.findAllByRole('button', { name: /desactivar/i }))[0]!)
+    // La acción real se ejecuta al confirmar dentro del diálogo
+    const dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: /desactivar/i }))
 
     expect(await screen.findByText('Forbidden')).toBeInTheDocument()
   })

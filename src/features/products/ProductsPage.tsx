@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
-import { Alert, Badge, Button, EmptyState, Input, PageHeader, Spinner, Table } from '../../shared/ui'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
+import { Alert, Badge, Button, ConfirmDialog, EmptyState, Input, PageHeader, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { getSessionUser } from '../auth/session'
 import { productsApi, type Product, type ListProductsParams } from './productsApi'
@@ -61,15 +61,33 @@ export function ProductsPage() {
   const { products, error, setError, refresh } = useProductList(searchParams)
   const [search, setSearch] = useState(searchParams.get('search') ?? '')
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [confirmTarget, setConfirmTarget] = useState<Product | null>(null)
   const { isAdmin, canMoveStock } = usePermissions()
+
+  // Feedback de éxito post/redirect: los formularios navegan con
+  // location.state.success; se lee una sola vez al montar y el navigate
+  // replace lo limpia del historial (no hay otro camino de escritura).
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [success] = useState<string | null>(
+    (location.state as { success?: string } | null)?.success ?? null,
+  )
+  useEffect(() => {
+    // Converge: tras el replace el state queda null y el efecto es no-op.
+    if (location.state?.success) {
+      navigate(location.pathname + location.search, { replace: true, state: null })
+    }
+  }, [location.state, location.pathname, location.search, navigate])
 
   async function setActive(product: Product, active: boolean) {
     setBusyId(product.id)
     setError(null)
     try {
       await productsApi.setActive(product.id, active)
+      setConfirmTarget(null) // cerrar el diálogo de confirmación al terminar
       await refresh() // refresco desde el server: la UI nunca inventa estado
     } catch (err) {
+      setConfirmTarget(null) // cerrar: el error se muestra en el Alert del listado
       setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor')
     } finally {
       setBusyId(null)
@@ -129,6 +147,7 @@ export function ProductsPage() {
         )}
       </div>
 
+      {success && <Alert tone="success">{success}</Alert>}
       {error && <Alert tone="error">{error}</Alert>}
 
       {products === null && !error && <Spinner label="Cargando productos" />}
@@ -182,7 +201,9 @@ export function ProductsPage() {
                     <div className="Products-actions">
                       <Link to={`/products/${p.id}/edit`}>Editar</Link>
                       {p.active ? (
-                        <Button variant="danger" loading={busyId === p.id} onClick={() => setActive(p, false)}>
+                        // Acción destructiva: pasa por confirmación (evita el
+                        // click accidental); la operación corre con loading.
+                        <Button variant="danger" onClick={() => setConfirmTarget(p)}>
                           Desactivar
                         </Button>
                       ) : (
@@ -198,6 +219,21 @@ export function ProductsPage() {
           </Table.Body>
         </Table>
       )}
+
+      <ConfirmDialog
+        open={confirmTarget !== null}
+        title="Desactivar producto"
+        description={
+          confirmTarget
+            ? `Vas a desactivar "${confirmTarget.name}" (SKU ${confirmTarget.sku}). Dejará de aceptar movimientos.`
+            : undefined
+        }
+        confirmLabel="Desactivar"
+        tone="danger"
+        pending={busyId !== null}
+        onConfirm={() => confirmTarget && setActive(confirmTarget, false)}
+        onCancel={() => setConfirmTarget(null)}
+      />
     </>
   )
 }

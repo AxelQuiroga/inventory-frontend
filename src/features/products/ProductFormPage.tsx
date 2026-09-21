@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Alert, Button, Card, Input, PageHeader } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
@@ -17,6 +17,19 @@ const emptyForm = {
   minStock: '5',
 }
 
+// fieldErrors por campo (contrato 400 del backend). Null = sin error.
+type FieldErrors = Record<string, string | null>
+
+// Toma solo el primer mensaje de cada campo: es el que se muestra bajo el Input.
+function extractFieldErrors(error: unknown): FieldErrors | null {
+  if (!(error instanceof ApiError) || !error.fieldErrors) return null
+  const result: FieldErrors = {}
+  for (const [field, messages] of Object.entries(error.fieldErrors)) {
+    result[field] = messages[0] ?? null
+  }
+  return result
+}
+
 export function ProductFormPage() {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -25,8 +38,12 @@ export function ProductFormPage() {
   const [form, setForm] = useState(emptyForm)
   const [original, setOriginal] = useState<Product | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [loading, setLoading] = useState(editing)
+  // Guard síncrono contra doble submit: el re-render de disabled puede llegar
+  // tarde ante dos clicks casi simultáneos; el ref es infalible.
+  const inFlight = useRef(false)
 
   useEffect(() => {
     if (!editing) return
@@ -67,7 +84,11 @@ export function ProductFormPage() {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
+    if (inFlight.current) return
+    inFlight.current = true
+
     setError(null)
+    setFieldErrors({}) // cada envío parte limpio
     setSubmitting(true)
 
     const payload = {
@@ -96,10 +117,17 @@ export function ProductFormPage() {
       } else {
         await productsApi.create(payload)
       }
-      navigate('/products')
+      // Post/redirect: el mensaje de éxito viaja al listado via location.state
+      // y se muestra una sola vez (el destino lo consume y limpia).
+      navigate('/products', { state: { success: editing ? 'Cambios guardados' : 'Producto creado' } })
     } catch (err) {
+      // Error general (Alert) y errores por campo conviven: el general da
+      // contexto (ej: "Invalid data"), los de campo indican qué corregir.
+      const fields = extractFieldErrors(err)
+      if (fields) setFieldErrors(fields)
       setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor')
     } finally {
+      inFlight.current = false
       setSubmitting(false)
     }
   }
@@ -123,13 +151,14 @@ export function ProductFormPage() {
       />
 
       <Card className="ProductForm-card">
-        <form onSubmit={handleSubmit} className="ProductForm-form">
+        <form onSubmit={handleSubmit} className="ProductForm-form" noValidate>
           <div className="ProductForm-grid">
             <Input
               id="name"
               label="Nombre"
               value={form.name}
               onChange={(e) => set('name', e.target.value)}
+              error={fieldErrors.name ?? undefined}
               required
             />
 
@@ -138,6 +167,7 @@ export function ProductFormPage() {
               label="SKU"
               value={form.sku}
               onChange={(e) => set('sku', e.target.value)}
+              error={fieldErrors.sku ?? undefined}
               required
             />
 
@@ -146,6 +176,7 @@ export function ProductFormPage() {
               label="Categoría"
               value={form.category}
               onChange={(e) => set('category', e.target.value)}
+              error={fieldErrors.category ?? undefined}
               required
             />
 
@@ -154,6 +185,7 @@ export function ProductFormPage() {
               label="Unidad"
               value={form.unit}
               onChange={(e) => set('unit', e.target.value)}
+              error={fieldErrors.unit ?? undefined}
               required
             />
 
@@ -165,6 +197,7 @@ export function ProductFormPage() {
               step={0.01}
               value={form.price}
               onChange={(e) => set('price', e.target.value)}
+              error={fieldErrors.price ?? undefined}
               required
             />
 
@@ -176,6 +209,7 @@ export function ProductFormPage() {
               step={1}
               value={form.minStock}
               onChange={(e) => set('minStock', e.target.value)}
+              error={fieldErrors.minStock ?? undefined}
             />
 
             <div className="ProductForm-full">
@@ -189,9 +223,7 @@ export function ProductFormPage() {
             </div>
           </div>
 
-          {error && (
-            <Alert tone="error">{error}</Alert>
-          )}
+          {error && <Alert tone="error">{error}</Alert>}
 
           <div className="ProductForm-actions">
             <Button type="submit" loading={submitting}>

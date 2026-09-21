@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { http, HttpResponse } from 'msw'
 import { describe, it, expect, beforeEach } from 'vitest'
 
@@ -18,6 +18,20 @@ const PRODUCT = {
   price: 25.5, stock: 10, minStock: 5, active: true,
 }
 
+// Stub del listado: muestra el success que llega por location.state
+// (igual que la ProductsPage real).
+function ListStub() {
+  const { state } = useLocation()
+  return (
+    <>
+      <div>listado de productos</div>
+      {(state as { success?: string } | null)?.success && (
+        <div role="status">{(state as { success?: string }).success}</div>
+      )}
+    </>
+  )
+}
+
 function renderAt(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -32,7 +46,7 @@ function renderAt(path: string) {
           }
         />
         <Route path="/" element={<div>inicio (redirect)</div>} />
-        <Route path="/products" element={<div>listado de productos</div>} />
+        <Route path="/products" element={<ListStub />} />
       </Routes>
     </MemoryRouter>,
   )
@@ -72,6 +86,24 @@ describe('MovementFormPage', () => {
     await waitFor(() => expect(screen.getByText('listado de productos')).toBeInTheDocument())
     expect(capturedUrl).toContain('/movements/entry')
     expect(capturedBody).toEqual({ productId: 'p1', quantity: 30, reason: 'Compra a proveedor' })
+  })
+
+  it('entrada exitosa vuelve al listado mostrando el mensaje de éxito', async () => {
+    server.use(
+      http.post('*/movements/entry', () =>
+        HttpResponse.json({ id: 'm1', type: 'IN' }, { status: 201 }),
+      ),
+    )
+    renderAt('/products/p1/movement')
+
+    const user = userEvent.setup()
+    await screen.findByText('Martillo')
+    await user.type(screen.getByLabelText('Cantidad'), '5')
+    await user.type(screen.getByLabelText('Motivo'), 'Compra')
+    await user.click(screen.getByRole('button', { name: /registrar entrada/i }))
+
+    expect(await screen.findByText('Movimiento registrado')).toBeInTheDocument()
+    expect(screen.getByText('listado de productos')).toBeInTheDocument()
   })
 
   it('Salida hace POST /movements/exit', async () => {
@@ -129,6 +161,36 @@ describe('MovementFormPage', () => {
     await user.click(screen.getByRole('button', { name: /registrar entrada/i }))
 
     expect(await screen.findByText('Product is inactive')).toBeInTheDocument()
+  })
+
+  it('mapea los fieldErrors del contrato (quantity/reason) bajo cada campo', async () => {
+    // El server valida quantity/reason con zod y devuelve fieldErrors:
+    // los botones son type=button (sin validación nativa), así que el caso
+    // es alcanzable en producción. El mapping existe: no se inventa.
+    server.use(
+      http.post('*/movements/exit', () =>
+        HttpResponse.json(
+          {
+            message: 'Invalid data',
+            errors: {
+              formErrors: [],
+              fieldErrors: { quantity: ['Quantity must be positive'] },
+            },
+          },
+          { status: 400 },
+        ),
+      ),
+    )
+    renderAt('/products/p1/movement')
+
+    const user = userEvent.setup()
+    await screen.findByText('Martillo')
+    await user.type(screen.getByLabelText('Cantidad'), '0')
+    await user.type(screen.getByLabelText('Motivo'), 'Venta')
+    await user.click(screen.getByRole('button', { name: /registrar salida/i }))
+
+    expect(await screen.findByText('Quantity must be positive')).toBeInTheDocument()
+    expect(screen.getByText('Invalid data')).toBeInTheDocument() // error general convive
   })
 
   it('VIEWER es redirigido (ruta ADMIN/OPERATOR)', async () => {
