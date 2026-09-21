@@ -136,4 +136,111 @@ export const salesHandlers: HttpHandler[] = [
   }),
 ]
 
-export const allHandlers = [...loginHandlers, ...productsHandlers, ...salesHandlers]
+// Réplica del módulo de usuarios (USERS_POLICY.MD):
+//   GET  /users → ManagedUser[] (sin password, sin el ADMIN único)
+//   POST /users/:id/deactivate|reactivate → estado mutado; 400 si el target
+//        es el ADMIN; 404 si no existe
+//   POST /auth/register → 201 sin password | 409 email duplicado | 400 (zod)
+// El array es mutable: el estado activo/inactivo persiste dentro del flujo.
+export const seedUsers = [
+  {
+    id: 'u-operator',
+    email: 'chico@inventory.com',
+    name: 'Chico Nuevo',
+    role: 'OPERATOR',
+    active: true,
+    createdAt: '2026-09-20T10:00:00.000Z',
+    updatedAt: '2026-09-20T10:00:00.000Z',
+  },
+  {
+    id: 'u-viewer',
+    email: 'lector@inventory.com',
+    name: 'Roberto',
+    role: 'VIEWER',
+    active: false,
+    createdAt: '2026-09-19T10:00:00.000Z',
+    updatedAt: '2026-09-19T10:00:00.000Z',
+  },
+]
+
+// El ADMIN del sistema (creado por seed en el backend): existe para que los
+// handlers puedan replicar el 400 'Cannot manage ADMIN user'.
+const SYSTEM_ADMIN_ID = 'u-admin'
+
+export const usersHandlers: HttpHandler[] = [
+  http.get('*/users', () => {
+    // Réplica del ListUsers del backend: sin el ADMIN único, sin password.
+    return HttpResponse.json(seedUsers)
+  }),
+
+  http.post('*/users/:id/deactivate', ({ params }) => {
+    const id = String(params.id)
+    const user = seedUsers.find((u) => u.id === id)
+    if (id === SYSTEM_ADMIN_ID) {
+      return HttpResponse.json({ message: 'Cannot manage ADMIN user' }, { status: 400 })
+    }
+    if (!user) {
+      return HttpResponse.json({ message: 'User not found' }, { status: 404 })
+    }
+    user.active = false
+    return HttpResponse.json({ ...user, active: false })
+  }),
+
+  http.post('*/users/:id/reactivate', ({ params }) => {
+    const id = String(params.id)
+    const user = seedUsers.find((u) => u.id === id)
+    if (id === SYSTEM_ADMIN_ID) {
+      return HttpResponse.json({ message: 'Cannot manage ADMIN user' }, { status: 400 })
+    }
+    if (!user) {
+      return HttpResponse.json({ message: 'User not found' }, { status: 404 })
+    }
+    user.active = true
+    return HttpResponse.json({ ...user, active: true })
+  }),
+
+  http.post('*/auth/register', async ({ request }) => {
+    const body = (await request.json()) as {
+      name: string
+      email: string
+      role: string
+      password: string
+    }
+
+    // Mismo orden que el backend real: zod valida primero (400), después el
+    // duplicado (409). El 400 de password corta debe ganarle al 409.
+    if (body.password.length < 6) {
+      return HttpResponse.json(
+        {
+          message: 'Invalid data',
+          errors: { fieldErrors: { password: ['Password must be at least 6 characters'] } },
+        },
+        { status: 400 },
+      )
+    }
+
+    if (seedUsers.some((u) => u.email === body.email)) {
+      return HttpResponse.json({ message: 'Email already registered' }, { status: 409 })
+    }
+
+    // Sin push a seedUsers: el array es compartido entre tests y resetHandlers()
+    // no restaura sus mutaciones. El handler es determinista contra el seed.
+    const created = {
+      id: `u-${Date.now()}`,
+      email: body.email,
+      name: body.name,
+      role: body.role === 'OPERATOR' ? 'OPERATOR' : 'VIEWER',
+      active: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    return HttpResponse.json(created, { status: 201 })
+  }),
+]
+
+export const allHandlers = [
+  ...loginHandlers,
+  ...productsHandlers,
+  ...salesHandlers,
+  ...usersHandlers,
+]

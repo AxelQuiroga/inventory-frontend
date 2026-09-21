@@ -11,6 +11,8 @@ import { MovementHistoryPage } from './features/movements/MovementHistoryPage'
 import { SaleListPage } from './features/sales/SaleListPage'
 import { SaleFormPage } from './features/sales/SaleFormPage'
 import { SaleDetailPage } from './features/sales/SaleDetailPage'
+import { UserListPage } from './features/users/UserListPage'
+import { UserFormPage } from './features/users/UserFormPage'
 
 export default function App() {
   return (
@@ -61,6 +63,23 @@ export default function App() {
             element={
               <RoleRoute roles={['ADMIN', 'OPERATOR']}>
                 <SaleFormPage />
+              </RoleRoute>
+            }
+          />
+          {/* Gestión de usuarios: solo ADMIN (USERS_POLICY.MD) */}
+          <Route
+            path="/users"
+            element={
+              <RoleRoute roles={['ADMIN']}>
+                <UserListPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/users/new"
+            element={
+              <RoleRoute roles={['ADMIN']}>
+                <UserFormPage />
               </RoleRoute>
             }
           />

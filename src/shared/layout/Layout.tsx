@@ -30,6 +30,14 @@ export function Layout() {
           <NavLink to="/sales" className={({ isActive }) => `Layout-navLink${isActive ? ' Layout-navLink--active' : ''}`}>
             Ventas
           </NavLink>
+          {/* Gestión de usuarios: link visible solo para el ADMIN (la ruta
+              también está protegida; esto es para no mostrar una acción que
+              el rol no puede usar) */}
+          {user?.role === 'ADMIN' && (
+            <NavLink to="/users" className={({ isActive }) => `Layout-navLink${isActive ? ' Layout-navLink--active' : ''}`}>
+              Usuarios
+            </NavLink>
+          )}
           {disabledItems.map((label) => (
             <span key={label} className="Layout-navDisabled" title="Próximamente">
               {label}

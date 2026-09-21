@@ -1,0 +1,83 @@
+/* Estilos compartidos del módulo Usuarios (lista + formulario). */
+
+/* --- UserListPage --- */
+
+/* --- UserFormPage --- */
+
+.UserForm-card {
+  max-width: 640px;
+}
+
+.UserForm-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--space-5);
+}
+
+.UserForm-legend {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  padding: 0;
+  margin-bottom: var(--space-3);
+}
+
+.UserForm-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+/* Fila de password: input + Generar + ojo en línea */
+.UserForm-passwordRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.UserForm-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+/* Pantalla de credenciales (una sola vez) */
+.UserForm-creds {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-5) 0;
+}
+
+.UserForm-creds div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.UserForm-creds dt {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.UserForm-creds dd {
+  margin: 0;
+  font-size: 1rem;
+  word-break: break-all;
+}
+
+.UserForm-credsPassword {
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+  user-select: all;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-neutral-soft);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
