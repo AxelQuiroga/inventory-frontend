@@ -15,6 +15,7 @@ const emptyForm = {
   price: '',
   description: '',
   minStock: '5',
+  initialStock: '0',
 }
 
 // fieldErrors por campo (contrato 400 del backend). Null = sin error.
@@ -63,6 +64,7 @@ export function ProductFormPage() {
           price: String(p.price),
           description: p.description ?? '',
           minStock: String(p.minStock),
+          initialStock: '0', // no se usa en edición (el campo no existe ahí)
         })
       })
       .catch((err: unknown) => {
@@ -99,6 +101,8 @@ export function ProductFormPage() {
       price: Number(form.price),
       ...(form.description ? { description: form.description } : {}),
       minStock: Number(form.minStock),
+      // El stock inicial entra como movimiento atómico del backend
+      initialStock: Number(form.initialStock) || 0,
     }
 
     try {
@@ -112,6 +116,7 @@ export function ProductFormPage() {
         if (payload.unit !== original.unit) changes.unit = payload.unit
         if (payload.price !== original.price) changes.price = payload.price
         if (payload.minStock !== original.minStock) changes.minStock = payload.minStock
+        // initialStock es de creación: nunca forma parte del diff de edición
         if (form.description !== (original.description ?? '')) changes.description = form.description
         if (Object.keys(changes).length > 0) await productsApi.update(id!, changes)
       } else {
@@ -211,6 +216,23 @@ export function ProductFormPage() {
               onChange={(e) => set('minStock', e.target.value)}
               error={fieldErrors.minStock ?? undefined}
             />
+
+            {/* El stock inicial es de creación: viaja al backend como
+                initialStock y entra por un movimiento IN ("Stock inicial").
+                En edición no existe: el stock solo cambia por movimientos. */}
+            {!editing && (
+              <Input
+                id="initialStock"
+                label="Stock inicial"
+                type="number"
+                min={0}
+                step={1}
+                value={form.initialStock}
+                onChange={(e) => set('initialStock', e.target.value)}
+                error={fieldErrors.initialStock ?? undefined}
+                required
+              />
+            )}
 
             <div className="ProductForm-full">
               <label className="Input-label" htmlFor="description">Descripción</label>

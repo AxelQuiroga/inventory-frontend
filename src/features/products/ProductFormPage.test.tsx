@@ -69,6 +69,7 @@ describe('ProductFormPage — modo crear', () => {
     expect(screen.getByLabelText('Categoría')).toBeInTheDocument()
     expect(screen.getByLabelText('Unidad')).toBeInTheDocument()
     expect(screen.getByLabelText('Precio')).toBeInTheDocument()
+    expect(screen.getByLabelText('Stock inicial')).toBeInTheDocument()
     expect(screen.getByLabelText('Stock mínimo')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /crear/i })).toBeInTheDocument()
   })
@@ -110,10 +111,11 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('Categoría'), 'Herramientas')
     await user.type(screen.getByLabelText('Unidad'), 'unit')
     await user.type(screen.getByLabelText('Precio'), '150')
+    await user.type(screen.getByLabelText('Stock inicial'), '40')
     await user.click(screen.getByRole('button', { name: /crear/i }))
 
     await waitFor(() => expect(screen.getByText('listado de productos')).toBeInTheDocument())
-    expect(capturedBody).toMatchObject({ name: 'Lijadora', sku: 'LIJ-1', price: 150 })
+    expect(capturedBody).toMatchObject({ name: 'Lijadora', sku: 'LIJ-1', price: 150, initialStock: 40 })
   })
 
   it('409 SKU duplicado muestra el mensaje del server', async () => {
@@ -273,6 +275,8 @@ describe('ProductFormPage — modo editar', () => {
     expect(await screen.findByLabelText('Nombre')).toHaveValue('Martillo')
     expect(screen.getByLabelText('SKU')).toHaveValue('MAR-1')
     expect(screen.getByLabelText('Precio')).toHaveValue(25.5)
+    // El stock inicial es de creación: en edición no existe el campo
+    expect(screen.queryByLabelText('Stock inicial')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /guardar/i })).toBeInTheDocument()
   })
 
