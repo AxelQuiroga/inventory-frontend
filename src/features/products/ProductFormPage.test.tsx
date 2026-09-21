@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { http, HttpResponse } from 'msw'
@@ -62,15 +62,33 @@ describe('ProductFormPage — modo crear', () => {
     saveToken(tokenFor('ADMIN'))
   })
 
-  it('renderiza los campos del createProductSchema', () => {
+  it('organiza el formulario como piensa el vendedor', () => {
     renderForm()
-    expect(screen.getByLabelText('Nombre')).toBeInTheDocument()
-    expect(screen.getByLabelText('SKU')).toBeInTheDocument()
-    expect(screen.getByLabelText('Categoría')).toBeInTheDocument()
-    expect(screen.getByLabelText('Unidad')).toBeInTheDocument()
-    expect(screen.getByLabelText('Precio')).toBeInTheDocument()
-    expect(screen.getByLabelText('Stock inicial')).toBeInTheDocument()
-    expect(screen.getByLabelText('Stock mínimo')).toBeInTheDocument()
+
+    // Lo primero: qué se vende y a cuánto
+    const datos = screen.getByRole('group', { name: 'Datos del producto' })
+    expect(within(datos).getByLabelText('Nombre')).toBeInTheDocument()
+    expect(within(datos).getByLabelText('Categoría')).toBeInTheDocument()
+    expect(within(datos).getByLabelText('Precio de venta')).toBeInTheDocument()
+
+    // Inventario: lenguaje del negocio, con la consecuencia explicada
+    const inventario = screen.getByRole('group', { name: 'Inventario' })
+    expect(within(inventario).getByLabelText('Stock actual')).toBeInTheDocument()
+    expect(
+      within(inventario).getByText(/cuántas unidades tenés hoy/i),
+    ).toBeInTheDocument()
+    expect(
+      within(inventario).getByLabelText(/avisarme cuando quedan menos de/i),
+    ).toBeInTheDocument()
+    expect(
+      within(inventario).getByText(/deja 0 si no querés alertas de stock bajo/i),
+    ).toBeInTheDocument()
+
+    // Lo técnico, apartado al final
+    const adicionales = screen.getByRole('group', { name: 'Datos adicionales' })
+    expect(within(adicionales).getByLabelText('SKU')).toBeInTheDocument()
+    expect(within(adicionales).getByLabelText('Unidad')).toBeInTheDocument()
+
     expect(screen.getByRole('button', { name: /crear/i })).toBeInTheDocument()
   })
 
@@ -87,7 +105,7 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('SKU'), 'LIJ-1')
     await user.type(screen.getByLabelText('Categoría'), 'Herramientas')
     await user.type(screen.getByLabelText('Unidad'), 'unit')
-    await user.type(screen.getByLabelText('Precio'), '150')
+    await user.type(screen.getByLabelText('Precio de venta'), '150')
     await user.click(screen.getByRole('button', { name: /crear/i }))
 
     // El listado muestra el feedback: la operación terminó correctamente
@@ -110,8 +128,8 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('SKU'), 'LIJ-1')
     await user.type(screen.getByLabelText('Categoría'), 'Herramientas')
     await user.type(screen.getByLabelText('Unidad'), 'unit')
-    await user.type(screen.getByLabelText('Precio'), '150')
-    await user.type(screen.getByLabelText('Stock inicial'), '40')
+    await user.type(screen.getByLabelText('Precio de venta'), '150')
+    await user.type(screen.getByLabelText('Stock actual'), '40')
     await user.click(screen.getByRole('button', { name: /crear/i }))
 
     await waitFor(() => expect(screen.getByText('listado de productos')).toBeInTheDocument())
@@ -131,7 +149,7 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('SKU'), 'DUP-1')
     await user.type(screen.getByLabelText('Categoría'), 'Cat')
     await user.type(screen.getByLabelText('Unidad'), 'unit')
-    await user.type(screen.getByLabelText('Precio'), '10')
+    await user.type(screen.getByLabelText('Precio de venta'), '10')
     await user.click(screen.getByRole('button', { name: /crear/i }))
 
     expect(await screen.findByText('SKU already exists')).toBeInTheDocument()
@@ -162,7 +180,7 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('Categoría'), 'Cat')
     await user.type(screen.getByLabelText('Unidad'), 'unit')
     // price 0 → inválido en el server
-    await user.type(screen.getByLabelText('Precio'), '0')
+    await user.type(screen.getByLabelText('Precio de venta'), '0')
     await user.click(screen.getByRole('button', { name: /crear/i }))
 
     expect(await screen.findByText('Name is required')).toBeInTheDocument()
@@ -188,7 +206,7 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('Nombre'), 'Algo')
     await user.type(screen.getByLabelText('Categoría'), 'Cat')
     await user.type(screen.getByLabelText('Unidad'), 'unit')
-    await user.type(screen.getByLabelText('Precio'), '10')
+    await user.type(screen.getByLabelText('Precio de venta'), '10')
     await user.click(screen.getByRole('button', { name: /crear/i }))
 
     expect(await screen.findByText('Invalid data')).toBeInTheDocument() // Alert general
@@ -217,7 +235,7 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('SKU'), 'RE-1')
     await user.type(screen.getByLabelText('Categoría'), 'Cat')
     await user.type(screen.getByLabelText('Unidad'), 'unit')
-    await user.type(screen.getByLabelText('Precio'), '10')
+    await user.type(screen.getByLabelText('Precio de venta'), '10')
     await user.click(screen.getByRole('button', { name: /crear/i }))
     expect(await screen.findByText('Name is required')).toBeInTheDocument()
 
@@ -245,7 +263,7 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('SKU'), 'DS-1')
     await user.type(screen.getByLabelText('Categoría'), 'Cat')
     await user.type(screen.getByLabelText('Unidad'), 'unit')
-    await user.type(screen.getByLabelText('Precio'), '10')
+    await user.type(screen.getByLabelText('Precio de venta'), '10')
 
     const submit = screen.getByRole('button', { name: /crear/i })
     await user.click(submit)
@@ -274,9 +292,9 @@ describe('ProductFormPage — modo editar', () => {
 
     expect(await screen.findByLabelText('Nombre')).toHaveValue('Martillo')
     expect(screen.getByLabelText('SKU')).toHaveValue('MAR-1')
-    expect(screen.getByLabelText('Precio')).toHaveValue(25.5)
-    // El stock inicial es de creación: en edición no existe el campo
-    expect(screen.queryByLabelText('Stock inicial')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Precio de venta')).toHaveValue(25.5)
+    // El stock actual es de creación: en edición no existe el campo
+    expect(screen.queryByLabelText('Stock actual')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /guardar/i })).toBeInTheDocument()
   })
 

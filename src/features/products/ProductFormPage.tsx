@@ -157,93 +157,110 @@ export function ProductFormPage() {
 
       <Card className="ProductForm-card">
         <form onSubmit={handleSubmit} className="ProductForm-form" noValidate>
-          <div className="ProductForm-grid">
-            <Input
-              id="name"
-              label="Nombre"
-              value={form.name}
-              onChange={(e) => set('name', e.target.value)}
-              error={fieldErrors.name ?? undefined}
-              required
-            />
-
-            <Input
-              id="sku"
-              label="SKU"
-              value={form.sku}
-              onChange={(e) => set('sku', e.target.value)}
-              error={fieldErrors.sku ?? undefined}
-              required
-            />
-
-            <Input
-              id="category"
-              label="Categoría"
-              value={form.category}
-              onChange={(e) => set('category', e.target.value)}
-              error={fieldErrors.category ?? undefined}
-              required
-            />
-
-            <Input
-              id="unit"
-              label="Unidad"
-              value={form.unit}
-              onChange={(e) => set('unit', e.target.value)}
-              error={fieldErrors.unit ?? undefined}
-              required
-            />
-
-            <Input
-              id="price"
-              label="Precio"
-              type="number"
-              min={0.01}
-              step={0.01}
-              value={form.price}
-              onChange={(e) => set('price', e.target.value)}
-              error={fieldErrors.price ?? undefined}
-              required
-            />
-
-            <Input
-              id="minStock"
-              label="Stock mínimo"
-              type="number"
-              min={0}
-              step={1}
-              value={form.minStock}
-              onChange={(e) => set('minStock', e.target.value)}
-              error={fieldErrors.minStock ?? undefined}
-            />
-
-            {/* El stock inicial es de creación: viaja al backend como
-                initialStock y entra por un movimiento IN ("Stock inicial").
-                En edición no existe: el stock solo cambia por movimientos. */}
-            {!editing && (
+          {/* Orden de pensamiento del vendedor: qué vendo y a cuánto →
+              cuánto tengo y cuándo avisarme → lo técnico al final. */}
+          <fieldset className="ProductForm-fieldset">
+            <legend className="ProductForm-legend">Datos del producto</legend>
+            <div className="ProductForm-grid">
               <Input
-                id="initialStock"
-                label="Stock inicial"
+                id="name"
+                label="Nombre"
+                value={form.name}
+                onChange={(e) => set('name', e.target.value)}
+                error={fieldErrors.name ?? undefined}
+                required
+              />
+
+              <Input
+                id="category"
+                label="Categoría"
+                value={form.category}
+                onChange={(e) => set('category', e.target.value)}
+                error={fieldErrors.category ?? undefined}
+                required
+              />
+
+              <Input
+                id="price"
+                label="Precio de venta"
+                type="number"
+                min={0.01}
+                step={0.01}
+                value={form.price}
+                onChange={(e) => set('price', e.target.value)}
+                error={fieldErrors.price ?? undefined}
+                required
+              />
+            </div>
+          </fieldset>
+
+          <fieldset className="ProductForm-fieldset">
+            <legend className="ProductForm-legend">Inventario</legend>
+            <div className="ProductForm-grid">
+              {/* El stock actual es de creación: viaja al backend como
+                  initialStock y entra por un movimiento IN ("Stock inicial").
+                  En edición no existe: el stock solo cambia por movimientos. */}
+              {!editing && (
+                <Input
+                  id="initialStock"
+                  label="Stock actual"
+                  helper="Cuántas unidades tenés hoy"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={form.initialStock}
+                  onChange={(e) => set('initialStock', e.target.value)}
+                  error={fieldErrors.initialStock ?? undefined}
+                  required
+                />
+              )}
+
+              <Input
+                id="minStock"
+                label="Avisarme cuando quedan menos de"
+                helper="Deja 0 si no querés alertas de stock bajo"
                 type="number"
                 min={0}
                 step={1}
-                value={form.initialStock}
-                onChange={(e) => set('initialStock', e.target.value)}
-                error={fieldErrors.initialStock ?? undefined}
-                required
-              />
-            )}
-
-            <div className="ProductForm-full">
-              <label className="Input-label" htmlFor="description">Descripción</label>
-              <textarea
-                id="description"
-                className="Input-field ProductForm-textarea"
-                value={form.description}
-                onChange={(e) => set('description', e.target.value)}
+                value={form.minStock}
+                onChange={(e) => set('minStock', e.target.value)}
+                error={fieldErrors.minStock ?? undefined}
               />
             </div>
-          </div>
+          </fieldset>
+
+          <fieldset className="ProductForm-fieldset">
+            <legend className="ProductForm-legend">Datos adicionales</legend>
+            <div className="ProductForm-grid">
+              <Input
+                id="sku"
+                label="SKU"
+                value={form.sku}
+                onChange={(e) => set('sku', e.target.value)}
+                error={fieldErrors.sku ?? undefined}
+                required
+              />
+
+              <Input
+                id="unit"
+                label="Unidad"
+                value={form.unit}
+                onChange={(e) => set('unit', e.target.value)}
+                error={fieldErrors.unit ?? undefined}
+                required
+              />
+
+              <div className="ProductForm-full">
+                <label className="Input-label" htmlFor="description">Descripción</label>
+                <textarea
+                  id="description"
+                  className="Input-field ProductForm-textarea"
+                  value={form.description}
+                  onChange={(e) => set('description', e.target.value)}
+                />
+              </div>
+            </div>
+          </fieldset>
 
           {error && <Alert tone="error">{error}</Alert>}
 

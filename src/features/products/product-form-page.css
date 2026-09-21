@@ -2,6 +2,24 @@
   max-width: 720px;
 }
 
+.ProductForm-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--space-5);
+}
+
+.ProductForm-fieldset:last-of-type {
+  margin-bottom: 0;
+}
+
+.ProductForm-legend {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  padding: 0;
+  margin-bottom: var(--space-3);
+}
+
 .ProductForm-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
