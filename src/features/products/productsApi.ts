@@ -6,7 +6,6 @@ export interface Product {
   name: string
   sku: string
   category: string
-  unit: string
   price: number
   description?: string
   stock: number
@@ -34,7 +33,6 @@ export interface CreateProductInput {
   name: string
   sku: string
   category: string
-  unit: string
   price: number
   description?: string
   minStock?: number

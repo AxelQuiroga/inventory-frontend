@@ -9,10 +9,10 @@ type HttpHandler = Parameters<SetupWorker['use']>[0]
 // Datos de prueba consistentes para dashboard y productos:
 // 4 productos, 2 con stock bajo (stock <= minStock), stock total 513.
 export const testProducts = [
-  { id: 'p1', name: 'Martillo', sku: 'MAR-1', category: 'Herramientas', unit: 'unit', price: 25.5, stock: 120, minStock: 10, active: true },
-  { id: 'p2', name: 'Taladro', sku: 'TAL-1', category: 'Herramientas', unit: 'unit', price: 99.99, stock: 3, minStock: 5, active: true },
-  { id: 'p3', name: 'Tornillos x100', sku: 'TOR-1', category: 'Ferretería', unit: 'caja', price: 8, stock: 0, minStock: 20, active: true },
-  { id: 'p4', name: 'Pintura blanca 4L', sku: 'PIE-1', category: 'Pinturería', unit: 'bidón', price: 45, stock: 390, minStock: 15, active: true },
+  { id: 'p1', name: 'Martillo', sku: 'MAR-1', category: 'Herramientas', price: 25.5, stock: 120, minStock: 10, active: true },
+  { id: 'p2', name: 'Taladro', sku: 'TAL-1', category: 'Herramientas', price: 99.99, stock: 3, minStock: 5, active: true },
+  { id: 'p3', name: 'Tornillos x100', sku: 'TOR-1', category: 'Ferretería', price: 8, stock: 0, minStock: 20, active: true },
+  { id: 'p4', name: 'Pintura blanca 4L', sku: 'PIE-1', category: 'Pinturería', price: 45, stock: 390, minStock: 15, active: true },
 ]
 
 export const loginHandlers: HttpHandler[] = [

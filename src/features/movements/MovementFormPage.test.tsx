@@ -14,7 +14,7 @@ function tokenFor(role: string) {
 }
 
 const PRODUCT = {
-  id: 'p1', name: 'Martillo', sku: 'MAR-1', category: 'Herramientas', unit: 'unit',
+  id: 'p1', name: 'Martillo', sku: 'MAR-1', category: 'Herramientas',
   price: 25.5, stock: 10, minStock: 5, active: true,
 }
 

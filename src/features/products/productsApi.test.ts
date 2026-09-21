@@ -26,13 +26,13 @@ describe('productsApi — mutaciones (contratos backend)', () => {
     )
 
     const created = await productsApi.create({
-      name: 'Nuevo', sku: 'NUE-1', category: 'Cat', unit: 'unit', price: 10, description: '', minStock: 5,
+      name: 'Nuevo', sku: 'NUE-1', category: 'Cat', price: 10, description: '', minStock: 5,
     })
 
     expect(created.id).toBe('nuevo-id')
     expect(captured.auth).toBe(`Bearer ${TOKEN}`)
     expect(captured.body).toEqual({
-      name: 'Nuevo', sku: 'NUE-1', category: 'Cat', unit: 'unit', price: 10, description: '', minStock: 5,
+      name: 'Nuevo', sku: 'NUE-1', category: 'Cat', price: 10, description: '', minStock: 5,
     })
   })
 
@@ -44,7 +44,7 @@ describe('productsApi — mutaciones (contratos backend)', () => {
     )
 
     await expect(
-      productsApi.create({ name: 'X', sku: 'DUP', category: 'C', unit: 'u', price: 1 }),
+      productsApi.create({ name: 'X', sku: 'DUP', category: 'C', price: 1 }),
     ).rejects.toMatchObject({ status: 409, message: 'SKU already exists' })
   })
 
@@ -103,7 +103,7 @@ describe('productsApi — mutaciones (contratos backend)', () => {
     )
 
     await expect(
-      productsApi.create({ name: 'X', sku: 'Y', category: 'C', unit: 'u', price: 1 }),
+      productsApi.create({ name: 'X', sku: 'Y', category: 'C', price: 1 }),
     ).rejects.toMatchObject({ status: 401, message: 'Unauthorized' })
   })
 })

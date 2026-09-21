@@ -87,7 +87,6 @@ describe('ProductFormPage — modo crear', () => {
     // Lo técnico, apartado al final
     const adicionales = screen.getByRole('group', { name: 'Datos adicionales' })
     expect(within(adicionales).getByLabelText('SKU')).toBeInTheDocument()
-    expect(within(adicionales).getByLabelText('Unidad')).toBeInTheDocument()
 
     expect(screen.getByRole('button', { name: /crear/i })).toBeInTheDocument()
   })
@@ -104,7 +103,6 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('Nombre'), 'Lijadora')
     await user.type(screen.getByLabelText('SKU'), 'LIJ-1')
     await user.type(screen.getByLabelText('Categoría'), 'Herramientas')
-    await user.type(screen.getByLabelText('Unidad'), 'unit')
     await user.type(screen.getByLabelText('Precio de venta'), '150')
     await user.click(screen.getByRole('button', { name: /crear/i }))
 
@@ -127,7 +125,6 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('Nombre'), 'Lijadora')
     await user.type(screen.getByLabelText('SKU'), 'LIJ-1')
     await user.type(screen.getByLabelText('Categoría'), 'Herramientas')
-    await user.type(screen.getByLabelText('Unidad'), 'unit')
     await user.type(screen.getByLabelText('Precio de venta'), '150')
     await user.type(screen.getByLabelText('Stock actual'), '40')
     await user.click(screen.getByRole('button', { name: /crear/i }))
@@ -148,7 +145,6 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('Nombre'), 'Duplicado')
     await user.type(screen.getByLabelText('SKU'), 'DUP-1')
     await user.type(screen.getByLabelText('Categoría'), 'Cat')
-    await user.type(screen.getByLabelText('Unidad'), 'unit')
     await user.type(screen.getByLabelText('Precio de venta'), '10')
     await user.click(screen.getByRole('button', { name: /crear/i }))
 
@@ -178,7 +174,6 @@ describe('ProductFormPage — modo crear', () => {
 
     await user.type(screen.getByLabelText('SKU'), 'FE-1')
     await user.type(screen.getByLabelText('Categoría'), 'Cat')
-    await user.type(screen.getByLabelText('Unidad'), 'unit')
     // price 0 → inválido en el server
     await user.type(screen.getByLabelText('Precio de venta'), '0')
     await user.click(screen.getByRole('button', { name: /crear/i }))
@@ -205,7 +200,6 @@ describe('ProductFormPage — modo crear', () => {
 
     await user.type(screen.getByLabelText('Nombre'), 'Algo')
     await user.type(screen.getByLabelText('Categoría'), 'Cat')
-    await user.type(screen.getByLabelText('Unidad'), 'unit')
     await user.type(screen.getByLabelText('Precio de venta'), '10')
     await user.click(screen.getByRole('button', { name: /crear/i }))
 
@@ -234,7 +228,6 @@ describe('ProductFormPage — modo crear', () => {
     // 1er submit: falla con fieldError en name (los otros campos completos)
     await user.type(screen.getByLabelText('SKU'), 'RE-1')
     await user.type(screen.getByLabelText('Categoría'), 'Cat')
-    await user.type(screen.getByLabelText('Unidad'), 'unit')
     await user.type(screen.getByLabelText('Precio de venta'), '10')
     await user.click(screen.getByRole('button', { name: /crear/i }))
     expect(await screen.findByText('Name is required')).toBeInTheDocument()
@@ -262,7 +255,6 @@ describe('ProductFormPage — modo crear', () => {
     await user.type(screen.getByLabelText('Nombre'), 'Unico')
     await user.type(screen.getByLabelText('SKU'), 'DS-1')
     await user.type(screen.getByLabelText('Categoría'), 'Cat')
-    await user.type(screen.getByLabelText('Unidad'), 'unit')
     await user.type(screen.getByLabelText('Precio de venta'), '10')
 
     const submit = screen.getByRole('button', { name: /crear/i })
@@ -281,7 +273,7 @@ describe('ProductFormPage — modo editar', () => {
       http.get('*/products/:id', () =>
         HttpResponse.json({
           id: 'p1', name: 'Martillo', sku: 'MAR-1', category: 'Herramientas',
-          unit: 'unit', price: 25.5, minStock: 10, description: 'Acero', stock: 120, active: true,
+          price: 25.5, minStock: 10, description: 'Acero', stock: 120, active: true,
         }),
       ),
     )
@@ -307,7 +299,7 @@ describe('ProductFormPage — modo editar', () => {
         getCalls += 1
         return HttpResponse.json({
           id: 'p1', name: 'Martillo', sku: 'MAR-1', category: 'Herramientas',
-          unit: 'unit', price: 25.5, minStock: 10, description: 'Acero', stock: 120, active: true,
+          price: 25.5, minStock: 10, description: 'Acero', stock: 120, active: true,
         })
       }),
       http.put('*/products/:id', async ({ request }) => {

@@ -11,7 +11,6 @@ const emptyForm = {
   name: '',
   sku: '',
   category: '',
-  unit: '',
   price: '',
   description: '',
   minStock: '5',
@@ -60,7 +59,6 @@ export function ProductFormPage() {
           name: p.name,
           sku: p.sku,
           category: p.category,
-          unit: p.unit,
           price: String(p.price),
           description: p.description ?? '',
           minStock: String(p.minStock),
@@ -97,7 +95,6 @@ export function ProductFormPage() {
       name: form.name.trim(),
       sku: form.sku.trim(),
       category: form.category.trim(),
-      unit: form.unit.trim(),
       price: Number(form.price),
       ...(form.description ? { description: form.description } : {}),
       minStock: Number(form.minStock),
@@ -113,7 +110,6 @@ export function ProductFormPage() {
         if (payload.name !== original.name) changes.name = payload.name
         if (payload.sku !== original.sku) changes.sku = payload.sku
         if (payload.category !== original.category) changes.category = payload.category
-        if (payload.unit !== original.unit) changes.unit = payload.unit
         if (payload.price !== original.price) changes.price = payload.price
         if (payload.minStock !== original.minStock) changes.minStock = payload.minStock
         // initialStock es de creación: nunca forma parte del diff de edición
@@ -204,14 +200,13 @@ export function ProductFormPage() {
                 <Input
                   id="initialStock"
                   label="Stock actual"
-                  helper="Cuántas unidades tenés hoy"
+                  helper="Cuántas unidades tenés hoy. Dejalo en 0 si todavía no tenés mercadería."
                   type="number"
                   min={0}
                   step={1}
                   value={form.initialStock}
                   onChange={(e) => set('initialStock', e.target.value)}
                   error={fieldErrors.initialStock ?? undefined}
-                  required
                 />
               )}
 
@@ -238,15 +233,6 @@ export function ProductFormPage() {
                 value={form.sku}
                 onChange={(e) => set('sku', e.target.value)}
                 error={fieldErrors.sku ?? undefined}
-                required
-              />
-
-              <Input
-                id="unit"
-                label="Unidad"
-                value={form.unit}
-                onChange={(e) => set('unit', e.target.value)}
-                error={fieldErrors.unit ?? undefined}
                 required
               />
 
