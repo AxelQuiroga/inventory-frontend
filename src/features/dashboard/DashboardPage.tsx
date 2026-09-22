@@ -3,12 +3,14 @@ import { Link } from 'react-router'
 import { Alert, Badge, Card, PageHeader, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { productsApi, type Product } from '../products/productsApi'
+import { movementsApi } from '../movements/movementsApi'
 import './dashboard-page.css'
 
 interface Totals {
   total: number
   lowStock: number
   stock: number
+  movements: number
 }
 
 export function DashboardPage() {
@@ -21,17 +23,20 @@ export function DashboardPage() {
     //  - total de productos (activos): GET /products?limit=1000 → array.length
     //    (limitación: sin metadata de paginación en el contrato, válido hasta 1000)
     //  - stock bajo: GET /products?lowStock=true → array.length
-    //  - stock total: suma del mismo listado (el KPI "movimientos" requiere
-    //    GET /movements global que el backend aún no expone; se informa).
+    //  - stock total: suma del mismo listado
+    //  - movimientos globales: GET /movements?limit=1000 → array.length (misma
+    //    limitación; la redacción de autoría es server-side, aquí solo cuenta)
     const all = productsApi.list({ limit: 1000 })
     const low = productsApi.list({ lowStock: true })
+    const movements = movementsApi.list({ limit: 1000 })
 
-    Promise.all([all, low])
-      .then(([allList, lowList]) => {
+    Promise.all([all, low, movements])
+      .then(([allList, lowList, movementsList]) => {
         setTotals({
           total: allList.length,
           lowStock: lowList.length,
           stock: allList.reduce((sum, p) => sum + p.stock, 0),
+          movements: movementsList.length,
         })
         setRecent(allList.slice(0, 5))
       })
@@ -64,6 +69,12 @@ export function DashboardPage() {
           <div className="Dashboard-kpiValue">{totals.stock}</div>
           <div className="Dashboard-kpiLabel">Stock total</div>
         </Card>
+        <Link to="/movements" className="Dashboard-kpiLink">
+          <Card>
+            <div className="Dashboard-kpiValue">{totals.movements}</div>
+            <div className="Dashboard-kpiLabel">Movimientos</div>
+          </Card>
+        </Link>
       </section>
 
       <PageHeader title="Productos recientes" action={<Link to="/products">ver todos</Link>} />

@@ -35,6 +35,8 @@ describe('DashboardPage', () => {
     expect(await screen.findByText('4')).toBeInTheDocument() // total de productos
     expect(screen.getByText('2')).toBeInTheDocument() // stock bajo (server: stock <= minStock)
     expect(screen.getByText('513')).toBeInTheDocument() // stock total (suma)
+    // KPI de movimientos: el link agrupa valor + label (accessible name)
+    expect(screen.getByRole('link', { name: '3 Movimientos' })).toBeInTheDocument()
     expect(screen.getByText('Total de productos')).toBeInTheDocument()
     // El KPI de stock bajo es un link al listado filtrado (el Badge del mismo
     // nombre vive en la tabla de recientes, por eso se busca por rol)
@@ -60,17 +62,18 @@ describe('DashboardPage', () => {
     expect(screen.getByRole('link', { name: 'Productos' })).toBeInTheDocument()
     // Secciones sin construir se muestran deshabilitadas, no como links falsos
     expect(screen.getByText('Inventario')).toBeInTheDocument()
-    expect(screen.getByText('Movimientos')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Movimientos' })).toBeInTheDocument()
     expect(screen.getByText(/seb@inventory.com/)).toBeInTheDocument()
   })
 
   it('con el API vacío muestra KPIs en cero', async () => {
     server.use(http.get('*/products', () => HttpResponse.json([])))
+    server.use(http.get('*/movements', () => HttpResponse.json([])))
     renderPage()
 
     await screen.findByText('Total de productos')
-    // Los tres KPIs (total, stock bajo, stock total) quedan en 0
-    expect(screen.getAllByText('0')).toHaveLength(3)
+    // Los cuatro KPIs (total, stock bajo, stock total, movimientos) en 0
+    expect(screen.getAllByText('0')).toHaveLength(4)
   })
 
   it('error del API muestra un mensaje de error', async () => {

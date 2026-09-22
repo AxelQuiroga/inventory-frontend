@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, it, expect, beforeEach } from 'vitest'
 
@@ -11,6 +11,9 @@ function tokenFor(role: string) {
 
 function renderLayout(role: string) {
   saveToken(tokenFor(role))
+  // Cada render monta un container propio: sin cleanup entre renders del
+  // mismo test, el DOM acumula layouts y getByRole ve duplicados.
+  cleanup()
   return render(
     <MemoryRouter initialEntries={['/']}>
       <Routes>
@@ -39,5 +42,23 @@ describe('Layout — navegación por rol', () => {
 
     renderLayout('VIEWER')
     expect(screen.queryByRole('link', { name: /usuarios/i })).not.toBeInTheDocument()
+  })
+
+  it('el link Movimientos es visible para todos los roles (lectura global)', () => {
+    renderLayout('ADMIN')
+    expect(screen.getByRole('link', { name: /movimientos/i })).toBeInTheDocument()
+
+    renderLayout('OPERATOR')
+    expect(screen.getByRole('link', { name: /movimientos/i })).toBeInTheDocument()
+
+    renderLayout('VIEWER')
+    expect(screen.getByRole('link', { name: /movimientos/i })).toBeInTheDocument()
+  })
+
+  it('Inventario sigue deshabilitado (única sección pendiente del MVP)', () => {
+    renderLayout('ADMIN')
+
+    expect(screen.getByText('Inventario')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /inventario/i })).not.toBeInTheDocument()
   })
 })

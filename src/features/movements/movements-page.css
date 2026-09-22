@@ -1,0 +1,30 @@
+/* Filtros y paginación de la vista global de movimientos. Mismo patrón de
+   espaciado que Products-filters y History-pagination: el design system
+   define las variables, la feature el layout. */
+.Movements-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.Movements-filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.Movements-pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.Movements-page-indicator {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

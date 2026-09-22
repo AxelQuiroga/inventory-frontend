@@ -136,6 +136,104 @@ export const salesHandlers: HttpHandler[] = [
   }),
 ]
 
+// Réplica del módulo global de movimientos (GET /movements):
+//   Filtros: page/limit + type (IN|OUT) + productId. El filtro userId solo
+//   aplica para ADMIN (redacción server-side: el frontend jamás lo envía, y
+//   para otros roles el backend lo descarta igual).
+//   Redacción: la autoría (userId/userName) viaja NULL salvo rol ADMIN —
+//   mismo contrato que GlobalMovement del backend.
+export const seedGlobalMovements = [
+  {
+    id: 'gm-3',
+    productId: 'p1',
+    productSku: 'MAR-1',
+    productName: 'Martillo',
+    userId: 'user-admin',
+    userName: 'Admin Usuario',
+    type: 'OUT',
+    quantity: 2,
+    reason: 'Venta',
+    createdAt: '2026-09-21T10:00:00.000Z',
+  },
+  {
+    id: 'gm-2',
+    productId: 'p2',
+    productSku: 'TAL-1',
+    productName: 'Taladro',
+    userId: 'user-operator',
+    userName: 'Op Usuario',
+    type: 'IN',
+    quantity: 5,
+    reason: 'Compra',
+    createdAt: '2026-09-20T10:00:00.000Z',
+  },
+  {
+    id: 'gm-1',
+    productId: 'p1',
+    productSku: 'MAR-1',
+    productName: 'Martillo',
+    userId: 'user-viewer',
+    userName: 'Vis Usuario',
+    type: 'IN',
+    quantity: 10,
+    reason: 'Compra',
+    createdAt: '2026-09-19T10:00:00.000Z',
+  },
+]
+
+// Extrae el rol del token de prueba `x.<b64 payload>.y` (mismo formato del
+// login real). La sesión que llega al backend decodifica el JWT y lee `role`;
+// aquí replicamos la SIGNA estadística: si no hay token, se trata como no
+// autenticado (401).
+function roleFromAuthHeader(request: Request): string | null {
+  const header = request.headers.get('authorization')
+  if (!header) return null
+  const token = header.replace(/^Bearer /, '')
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]!))
+    return payload.role ?? null
+  } catch {
+    return null
+  }
+}
+
+export const movementsHandlers: HttpHandler[] = [
+  http.get('*/movements', ({ request }) => {
+    const role = roleFromAuthHeader(request)
+    if (!role) {
+      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+
+    const url = new URL(request.url)
+    const type = url.searchParams.get('type')
+    const productId = url.searchParams.get('productId')
+    const userId = url.searchParams.get('userId')
+    const page = Number(url.searchParams.get('page') ?? '1')
+    const limit = Number(url.searchParams.get('limit') ?? '20')
+
+    // Los filtros que el backend de verdad aplica: type/productId para todos;
+    // userId SOLO si el rol ve la autoría (política USERS/POLICY).
+    let rows = seedGlobalMovements
+    if (type === 'IN' || type === 'OUT') rows = rows.filter((m) => m.type === type)
+    if (productId) rows = rows.filter((m) => m.productId === productId)
+    if (userId && role === 'ADMIN') rows = rows.filter((m) => m.userId === userId)
+
+    rows = [...rows].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+
+    const start = (page - 1) * limit
+    const pageRows = rows.slice(start, start + limit)
+
+    // Redacción server-side: la tabla solo lleva autoría si el rol es ADMIN.
+    return HttpResponse.json(
+      pageRows.map((m) =>
+        role === 'ADMIN'
+          ? m
+          : { ...m, userId: null, userName: null },
+      ),
+    )
+  }),
+]
+
 // Réplica del módulo de usuarios (USERS_POLICY.MD):
 //   GET  /users → ManagedUser[] (sin password, sin el ADMIN único)
 //   POST /users/:id/deactivate|reactivate → estado mutado; 400 si el target
@@ -242,5 +340,6 @@ export const allHandlers = [
   ...loginHandlers,
   ...productsHandlers,
   ...salesHandlers,
+  ...movementsHandlers,
   ...usersHandlers,
 ]

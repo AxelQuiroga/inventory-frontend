@@ -5,7 +5,7 @@ import { Button } from '../ui'
 import './layout.css'
 
 // Secciones pendientes del MVP: se muestran deshabilitadas (no links falsos).
-const disabledItems = ['Inventario', 'Movimientos']
+const disabledItems = ['Inventario']
 
 export function Layout() {
   const user = getSessionUser()
@@ -29,6 +29,12 @@ export function Layout() {
           </NavLink>
           <NavLink to="/sales" className={({ isActive }) => `Layout-navLink${isActive ? ' Layout-navLink--active' : ''}`}>
             Ventas
+          </NavLink>
+          {/* Movimientos globales: lectura para cualquier rol autenticado.
+              La política de autoría se resuelve server-side; el link no está
+              condicionado por rol porque la página es accesible para todos. */}
+          <NavLink to="/movements" className={({ isActive }) => `Layout-navLink${isActive ? ' Layout-navLink--active' : ''}`}>
+            Movimientos
           </NavLink>
           {/* Gestión de usuarios: link visible solo para el ADMIN (la ruta
               también está protegida; esto es para no mostrar una acción que
