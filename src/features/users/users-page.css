@@ -33,7 +33,9 @@
   display: grid;
   grid-template-columns: 1fr auto auto;
   gap: var(--space-2);
-  align-items: start;
+  /* Los botones (Generar/mostrar) se alinean con el input, que vive debajo
+     del label que renderiza el design system Input. */
+  align-items: end;
 }
 
 .UserForm-actions {

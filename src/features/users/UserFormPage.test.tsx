@@ -98,7 +98,10 @@ describe('UserFormPage — formulario', () => {
     expect(await screen.findByText('Segura#123')).toBeInTheDocument()
     expect(screen.getByText(/una sola vez/i)).toBeInTheDocument()
     expect(screen.getByText('chico@inventory.com')).toBeInTheDocument()
-    expect(captured?.role).toBe('OPERATOR')
+    // El body capturado se valida contra el objeto: `captured?.role` da TS2339
+    // (TypeScript ~6.0.2 narrow a `never` cuando la única asignación vive en
+    // un closure async). El acceso directo es el patrón de movementsApi.test.
+    expect(captured).toMatchObject({ role: 'OPERATOR' })
     // El formulario ya no está
     expect(screen.queryByRole('button', { name: /crear usuario/i })).not.toBeInTheDocument()
   })
@@ -132,7 +135,7 @@ describe('UserFormPage — formulario', () => {
     // 'una sola vez' ahora es EXCLUSIVO del aviso de credenciales (el helper
     // del formulario ya no usa esa frase): si esto aparece, la creación pasó.
     expect(await screen.findByText(/una sola vez/i)).toBeInTheDocument()
-    expect(captured?.role).toBe('VIEWER')
+    expect(captured).toMatchObject({ role: 'VIEWER' })
   })
 
   it('email duplicado muestra el 409 del backend y mantiene el formulario', async () => {

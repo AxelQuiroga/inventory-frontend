@@ -26,8 +26,13 @@ export function TableRow({ children }: { children: React.ReactNode }) {
   return <tr>{children}</tr>
 }
 
-export function TableTh({ children }: { children: React.ReactNode }) {
-  return <th scope="col">{children}</th>
+export function TableTh({ children, align }: { children: React.ReactNode; align?: 'left' | 'right' }) {
+  // Mismo contrato que TableTd: un header numérico se alinea con sus celdas.
+  return (
+    <th scope="col" className={align === 'right' ? 'Table--align-right' : undefined}>
+      {children}
+    </th>
+  )
 }
 
 export function TableTd({

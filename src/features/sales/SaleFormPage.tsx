@@ -171,7 +171,9 @@ export function SaleFormPage() {
                     </div>
                     <div className="SaleForm-add">
                       <Input
-                        aria-label={`Cantidad de ${product.name}`}
+                        id={`quantity-${product.id}`}
+                        label={`Cantidad de ${product.name}`}
+                        hideLabel
                         type="number"
                         min={1}
                         max={remaining}
@@ -220,7 +222,9 @@ export function SaleFormPage() {
                   </div>
                   <div className="SaleForm-cartLineActions">
                     <Input
-                      aria-label={`Cantidad de ${line.product.name} en la venta`}
+                      id={`cart-quantity-${line.product.id}`}
+                      label={`Cantidad de ${line.product.name} en la venta`}
+                      hideLabel
                       type="number"
                       min={1}
                       max={available(line.product) + line.quantity}

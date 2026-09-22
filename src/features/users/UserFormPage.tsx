@@ -156,10 +156,10 @@ export function UserFormPage() {
               </div>
 
               <div>
-                <label className="Input-label" htmlFor="password">Contraseña</label>
                 <div className="UserForm-passwordRow">
                   <Input
                     id="password"
+                    label="Contraseña"
                     type={showPassword ? 'text' : 'password'}
                     minLength={6}
                     value={form.password}
