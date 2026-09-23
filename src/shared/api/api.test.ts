@@ -1,8 +1,9 @@
-import { describe, it, expect, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../test/test-utils'
 import { api, ApiError } from './api'
+import { SESSION_EXPIRED_EVENT } from '../../features/auth/sessionEvents'
 
 // Contratos del cliente HTTP contra msw (server HTTP simulado, no mocks de
 // funciones): el request sale con los headers correctos y la respuesta del
@@ -118,39 +119,42 @@ describe('ApiError — propagación de fieldErrors', () => {
 
 describe('api() — 401 global (sesión expirada)', () => {
   const TOKEN = 'x.y.z'
+  const onSessionExpired = vi.fn()
 
+  // Escucha de prueba del evento que api() emite: la navegación en sí no es
+  // responsabilidad del cliente HTTP (la hace sessionEvents en el bootstrap),
+  // acá se verifica que la expiración se delega por evento.
+  beforeAll(() => {
+    window.addEventListener(SESSION_EXPIRED_EVENT, onSessionExpired)
+  })
+  afterAll(() => {
+    window.removeEventListener(SESSION_EXPIRED_EVENT, onSessionExpired)
+  })
+  beforeEach(() => {
+    onSessionExpired.mockClear()
+  })
   afterEach(() => {
-    vi.restoreAllMocks()
     localStorage.removeItem('inventory_token')
   })
 
-  it('401 en un endpoint protegido limpia el token y redirige a /login', async () => {
+  it('401 en un endpoint protegido emite el evento de expiración y lanza ApiError', async () => {
     localStorage.setItem('inventory_token', TOKEN)
-    const assign = vi.fn()
-    // jsdom no implementa navegación real: el spy captura el intento.
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, assign },
-      writable: true,
-    })
     server.use(
       http.get('*/movements', () => HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })),
     )
 
+    // El ApiError(401) es el contrato con el caller...
     const error = await api('/movements').catch((err: unknown) => err)
 
     expect(error).toBeInstanceOf(ApiError)
     expect((error as ApiError).status).toBe(401)
-    expect(localStorage.getItem('inventory_token')).toBeNull() // clearToken corrió
-    expect(assign).toHaveBeenCalledWith('/login')
+    expect((error as ApiError).message).toBe('Unauthorized')
+    // ...y la expiración (clearToken + /login) queda delegada a la capa de auth.
+    expect(onSessionExpired).toHaveBeenCalledTimes(1)
   })
 
-  it('401 de /auth/login (credenciales incorrectas) NO redirige ni limpia: es flujo normal de la UI', async () => {
+  it('401 de /auth/login con skipAuthRedirect (credenciales inválidas) NO emite el evento: es flujo normal de la UI', async () => {
     localStorage.setItem('inventory_token', TOKEN)
-    const assign = vi.fn()
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, assign },
-      writable: true,
-    })
     server.use(
       http.post('*/auth/login', () => HttpResponse.json({ message: 'Invalid credentials' }, { status: 401 })),
     )
@@ -158,26 +162,74 @@ describe('api() — 401 global (sesión expirada)', () => {
     const error = await api('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email: 'a@b.c', password: 'mal' }),
+      skipAuthRedirect: true,
     }).catch((err: unknown) => err)
 
+    expect(error).toBeInstanceOf(ApiError)
     expect((error as ApiError).status).toBe(401)
+    expect((error as ApiError).message).toBe('Invalid credentials')
     expect(localStorage.getItem('inventory_token')).toBe(TOKEN) // no limpió
-    expect(assign).not.toHaveBeenCalled() // no redirigió
+    expect(onSessionExpired).not.toHaveBeenCalled() // no expiró
   })
 
-  it('401 sin token en storage: igual redirige (no hay nada que limpiar y no explota)', async () => {
-    const assign = vi.fn()
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, assign },
-      writable: true,
-    })
+  it('401 sin token en storage: igual emite el evento (no hay nada que limpiar y no explota)', async () => {
     server.use(
       http.get('*/products', () => HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })),
     )
 
     const error = await api('/products').catch((err: unknown) => err)
 
+    expect(error).toBeInstanceOf(ApiError)
     expect((error as ApiError).status).toBe(401)
-    expect(assign).toHaveBeenCalledWith('/login')
+    expect(onSessionExpired).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('api() — content-type solo con body JSON real', () => {
+  it('POST sin body (deactivate/reactivate) NO manda content-type: Fastify rechaza application/json vacío con 400', async () => {
+    let captured: Headers | undefined
+    server.use(
+      http.post('*/products/:id/deactivate', ({ request }) => {
+        captured = request.headers
+        return HttpResponse.json({ id: '1', active: false })
+      }),
+    )
+
+    const result = await api('/products/1/deactivate', { method: 'POST' })
+
+    expect(result).toEqual({ id: '1', active: false })
+    expect(captured?.get('content-type')).toBeNull()
+  })
+
+  it('POST con FormData no fuerza application/json: el runtime agrega su boundary multipart', async () => {
+    let captured: Headers | undefined
+    server.use(
+      http.post('*/uploads', ({ request }) => {
+        captured = request.headers
+        return HttpResponse.json({ ok: true }, { status: 201 })
+      }),
+    )
+
+    const form = new FormData()
+    form.append('file', new Blob(['x']), 'x.txt')
+
+    await api('/uploads', { method: 'POST', body: form })
+
+    // Si el cliente forzara application/json sobre FormData el boundary no
+    // existiría y el servidor no podría parsear el multipart. El guard del
+    // borde deja que el runtime genere el content-type con su boundary.
+    expect(captured?.get('content-type')).toMatch(/^multipart\/form-data; boundary=/)
+  })
+})
+
+describe('api() — 204 No Content', () => {
+  it('204 resuelve null sin intentar parsear el cuerpo vacío', async () => {
+    server.use(
+      http.post('*/archivar', () => new HttpResponse(null, { status: 204 })),
+    )
+
+    const result = await api('/archivar', { method: 'POST' })
+
+    expect(result).toBeNull()
   })
 })

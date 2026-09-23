@@ -8,6 +8,13 @@ export interface LoginInput {
 
 export const authApi = {
   login(data: LoginInput): Promise<{ token: string }> {
-    return api('/auth/login', { method: 'POST', body: JSON.stringify(data) })
+    return api('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      // El 401 de login son credenciales inválidas, flujo normal de la UI: no
+      // debe disparar la expiración de sesión global (opt-out explícito, no
+      // por hardcodear la ruta en el cliente HTTP).
+      skipAuthRedirect: true,
+    })
   },
 }

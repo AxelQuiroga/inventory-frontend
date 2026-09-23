@@ -1,4 +1,4 @@
-import { getToken } from './tokenStore'
+import { clearToken, getToken } from './tokenStore'
 
 // Usuario de la sesión decodificado del payload del JWT. Sin estado global:
 // la fuente de verdad es el token persistido.
@@ -34,4 +34,14 @@ export function getSessionUser(): SessionUser | null {
   } catch {
     return null
   }
+}
+
+// Expiración de sesión (401 pasivo del servidor): único punto de la política
+// que limpia el token y manda al login. Vive acá, en la capa de auth, no en el
+// cliente HTTP: api() la invoca sin conocer rutas. window.location.assign en
+// vez de useNavigate porque este módulo no vive dentro de React; el logout
+// explícito de Layout (que sí está en React) usa useNavigate.
+export function expireSession(): void {
+  clearToken()
+  window.location.assign('/login')
 }
