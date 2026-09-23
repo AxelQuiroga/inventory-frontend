@@ -48,38 +48,81 @@
 /* Pantalla de credenciales (una sola vez) */
 .UserForm-creds {
   display: grid;
-  gap: var(--space-4);
-  margin: var(--space-5) 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5) var(--space-4);
+  margin: var(--space-5) 0 var(--space-4);
 }
 
-.UserForm-creds div {
+.UserForm-credsItem {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  min-width: 0;
 }
 
-.UserForm-creds dt {
-  font-size: 0.8rem;
+.UserForm-credsItem dt {
+  font-size: var(--font-size-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
 }
 
-.UserForm-creds dd {
+.UserForm-credsItem dd {
   margin: 0;
-  font-size: 1rem;
-  word-break: break-all;
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+/* Contraseña: la credencial temporal es el elemento dominante */
+.UserForm-credsItem--password {
+  grid-column: 1 / -1;
+  margin-top: var(--space-2);
+}
+
+.UserForm-credsItem--password dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .UserForm-credsPassword {
   font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
   font-weight: 700;
-  font-size: 1.15rem;
-  letter-spacing: 0.03em;
-  user-select: all;
-  padding: var(--space-2) var(--space-3);
+  font-size: 1.35rem;
+  letter-spacing: 0.08em;
+  color: var(--color-text);
   background: var(--color-neutral-soft);
-  border: 1px dashed var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  padding: var(--space-4);
+  text-align: center;
+  user-select: all;
+  cursor: text;
+}
+
+/* Advertencia sobria: contraseña de una sola visualización */
+.UserForm-notice {
+  margin: 0 0 var(--space-5);
+  padding-left: var(--space-4);
+  border-left: 3px solid var(--color-warning);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.UserForm-notice strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .UserForm-creds {
+    grid-template-columns: 1fr;
+  }
+
+  .UserForm-credsItem--password {
+    grid-column: auto;
+  }
 }

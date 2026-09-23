@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { Alert, Button, Card, Input, PageHeader } from '../../shared/ui'
+import { Alert, Badge, Button, Card, Input, PageHeader } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { usersApi, type ManagedUser } from './usersApi'
 import { generatePassword } from './password'
@@ -82,25 +82,32 @@ export function UserFormPage() {
 
         <Card className="UserForm-card">
           <Alert tone="success">
-            El usuario <strong>{user.name}</strong> se creó. Esta contraseña se muestra{' '}
-            <strong>una sola vez</strong>: si se pierde, no se puede volver a ver (el sistema la
-            guarda cifrada de forma irreversible) y habrá que desactivar la cuenta y crear otra.
+            El usuario <strong>{user.name}</strong> se creó correctamente.
           </Alert>
 
           <dl className="UserForm-creds">
-            <div>
+            <div className="UserForm-credsItem">
               <dt>Email</dt>
               <dd>{user.email}</dd>
             </div>
-            <div>
+            <div className="UserForm-credsItem">
               <dt>Rol</dt>
               <dd>{user.role === 'OPERATOR' ? 'Operador' : 'Lector'}</dd>
             </div>
-            <div>
-              <dt>Contraseña</dt>
+            <div className="UserForm-credsItem UserForm-credsItem--password">
+              <dt>
+                Contraseña
+                <Badge tone="warning">Una sola vez</Badge>
+              </dt>
               <dd className="UserForm-credsPassword">{password}</dd>
             </div>
           </dl>
+
+          <p className="UserForm-notice">
+            Esta contraseña <strong>no se puede volver a ver</strong> al cerrar esta pantalla: el
+            sistema la guarda cifrada de forma irreversible. Si la perdés, desactivá la cuenta y
+            creá otra.
+          </p>
 
           <div className="UserForm-actions">
             <Button onClick={() => navigate('/users')}>Listo, volver a usuarios</Button>
