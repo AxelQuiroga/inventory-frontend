@@ -2,6 +2,7 @@
 // status + message del contrato REST (ej: 401 { message: 'Invalid credentials' }),
 // y fieldErrors del contrato de validación 400 { message, errors: { fieldErrors } }
 // para que los formularios puedan mostrar el error junto a cada campo (Slice C).
+import { clearToken } from '../../features/auth/tokenStore'
 export class ApiError extends Error {
   status: number
   // Opcional: solo el 400 de validación lo trae. 401/404/500 no tienen por qué.
@@ -44,6 +45,15 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   }
 
   const body = await response.json().catch(() => null)
+
+  if (response.status === 401 && !path.startsWith('/auth/')) {
+    // Sesión expirada o token inválido: la sesión persistida murió → limpiar
+    // y volver al login. El 401 de /auth/login (credenciales incorrectas) es
+    // un caso NORMAL de la UI: NO dispara el redirect porque ya estamos en el
+    // login y el formulario es quien muestra el error.
+    clearToken()
+    window.location.assign('/login')
+  }
 
   if (!response.ok) {
     const fieldErrors = isFieldErrors(body?.errors?.fieldErrors)

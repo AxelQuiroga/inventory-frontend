@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../test/test-utils'
@@ -113,5 +113,71 @@ describe('ApiError — propagación de fieldErrors', () => {
     expect(error).toBeInstanceOf(ApiError)
     expect((error as ApiError).status).toBe(0)
     expect((error as ApiError).fieldErrors).toBeUndefined()
+  })
+})
+
+describe('api() — 401 global (sesión expirada)', () => {
+  const TOKEN = 'x.y.z'
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    localStorage.removeItem('inventory_token')
+  })
+
+  it('401 en un endpoint protegido limpia el token y redirige a /login', async () => {
+    localStorage.setItem('inventory_token', TOKEN)
+    const assign = vi.fn()
+    // jsdom no implementa navegación real: el spy captura el intento.
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, assign },
+      writable: true,
+    })
+    server.use(
+      http.get('*/movements', () => HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })),
+    )
+
+    const error = await api('/movements').catch((err: unknown) => err)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect((error as ApiError).status).toBe(401)
+    expect(localStorage.getItem('inventory_token')).toBeNull() // clearToken corrió
+    expect(assign).toHaveBeenCalledWith('/login')
+  })
+
+  it('401 de /auth/login (credenciales incorrectas) NO redirige ni limpia: es flujo normal de la UI', async () => {
+    localStorage.setItem('inventory_token', TOKEN)
+    const assign = vi.fn()
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, assign },
+      writable: true,
+    })
+    server.use(
+      http.post('*/auth/login', () => HttpResponse.json({ message: 'Invalid credentials' }, { status: 401 })),
+    )
+
+    const error = await api('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: 'a@b.c', password: 'mal' }),
+    }).catch((err: unknown) => err)
+
+    expect((error as ApiError).status).toBe(401)
+    expect(localStorage.getItem('inventory_token')).toBe(TOKEN) // no limpió
+    expect(assign).not.toHaveBeenCalled() // no redirigió
+  })
+
+  it('401 sin token en storage: igual redirige (no hay nada que limpiar y no explota)', async () => {
+    const assign = vi.fn()
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, assign },
+      writable: true,
+    })
+    server.use(
+      http.get('*/products', () => HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })),
+    )
+
+    const error = await api('/products').catch((err: unknown) => err)
+
+    expect((error as ApiError).status).toBe(401)
+    expect(assign).toHaveBeenCalledWith('/login')
   })
 })
