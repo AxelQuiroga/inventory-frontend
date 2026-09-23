@@ -18,21 +18,22 @@ describe('movementsApi — history (contrato GET /movements/history/:productId)'
     saveToken(TOKEN)
   })
 
-  it('history hace GET a la URL correcta con el token y devuelve la lista', async () => {
+  it('history hace GET a la URL correcta con el token y devuelve la página { data, total }', async () => {
     let capturedUrl = ''
     let capturedAuth: string | null = null
     server.use(
       http.get('*/movements/history/:productId', ({ request }) => {
         capturedUrl = request.url
         capturedAuth = request.headers.get('authorization')
-        return HttpResponse.json(HISTORY)
+        return HttpResponse.json({ data: HISTORY, total: HISTORY.length })
       }),
     )
 
     const history = await movementsApi.history('p1')
 
-    expect(history).toHaveLength(2)
-    expect(history[0]!.type).toBe('OUT') // más reciente primero
+    expect(history.data).toHaveLength(2)
+    expect(history.data[0]!.type).toBe('OUT') // más reciente primero
+    expect(history.total).toBe(2)
     expect(capturedUrl).toBe(`${base}/movements/history/p1`)
     expect(capturedAuth).toBe(`Bearer ${TOKEN}`)
   })
@@ -49,6 +50,11 @@ describe('movementsApi — history (contrato GET /movements/history/:productId)'
 
   it('sin token va sin authorization header', async () => {
     clearToken()
+    // El 401 global redirige a /login: en tests el assign real no existe.
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, assign: () => {} },
+      writable: true,
+    })
     let sawAuthHeader: string | null = 'sentinel'
     server.use(
       http.get('*/movements/history/:productId', ({ request }) => {

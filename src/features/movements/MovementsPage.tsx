@@ -5,10 +5,11 @@ import { ApiError } from '../../shared/api/api'
 import { getSessionUser } from '../auth/session'
 import { productsApi, type Product } from '../products/productsApi'
 import { movementsApi, type GlobalMovement } from './movementsApi'
+import type { Paginated } from '../../shared/api/paginated'
 import './movements-page.css'
 
-// El server pagina con page/limit: el cliente muestra una página a la vez.
-// Una página "llena" (== tamaño) puede tener más atrás → Siguiente habilitado.
+// El server pagina con page/limit y el contrato expone { data, total }:
+// "Siguiente" se decide con el total exacto, no adivinando por tamaño de página.
 const MOVEMENTS_PAGE_SIZE = 20
 
 // Vista global de movimientos (GET /movements): cualquier rol autenticado.
@@ -20,7 +21,7 @@ export function MovementsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const isAdmin = getSessionUser()?.role === 'ADMIN'
 
-  const [movements, setMovements] = useState<GlobalMovement[] | null>(null)
+  const [movements, setMovements] = useState<Paginated<GlobalMovement> | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [error, setError] = useState<string | null>(null)
 
@@ -49,14 +50,14 @@ export function MovementsPage() {
     }
   }, [searchParams])
 
-  // Opciones del filtro de producto: el listado completo para el select.
-  // Los productos activos alcanzan (default del backend), límite 1000.
+  // Opciones del filtro de producto: el listado para el select. Los productos
+  // activos alcanzan (default del backend); 1000 es cota del propio select.
   useEffect(() => {
     let cancelled = false
     productsApi
       .list({ limit: 1000 })
       .then((list) => {
-        if (!cancelled) setProducts(list)
+        if (!cancelled) setProducts(list.data)
       })
       .catch(() => {
         // El filtro de producto queda vacío; el resto de la página sigue.
@@ -120,7 +121,7 @@ export function MovementsPage() {
 
       {movements === null && !error && <Spinner label="Cargando movimientos" />}
 
-      {movements !== null && movements.length === 0 && (
+      {movements !== null && movements.data.length === 0 && (
         <EmptyState
           title={hasFilters ? 'Sin movimientos con esos filtros' : 'Sin movimientos registrados'}
           description={
@@ -131,7 +132,7 @@ export function MovementsPage() {
         />
       )}
 
-      {movements !== null && movements.length > 0 && (
+      {movements !== null && movements.data.length > 0 && (
         <>
           <Table>
             <Table.Head>
@@ -147,7 +148,7 @@ export function MovementsPage() {
               </Table.Row>
             </Table.Head>
             <Table.Body>
-              {movements.map((m) => (
+              {movements.data.map((m) => (
                 <Table.Row key={m.id}>
                   <Table.Td>{new Date(m.createdAt).toLocaleString()}</Table.Td>
                   <Table.Td>
@@ -182,7 +183,8 @@ export function MovementsPage() {
             <Button
               variant="secondary"
               onClick={() => applyFilter({ page: String(page + 1) })}
-              disabled={movements.length < MOVEMENTS_PAGE_SIZE}
+              // Con total exacto: hay página siguiente si todavía no la pasamos.
+              disabled={page * MOVEMENTS_PAGE_SIZE >= movements.total}
             >
               Siguiente
             </Button>

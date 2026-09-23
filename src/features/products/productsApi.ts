@@ -1,5 +1,6 @@
 import { api } from '../../shared/api/api'
 import { getToken } from '../auth/tokenStore'
+import type { Paginated } from '../../shared/api/paginated'
 
 export interface Product {
   id: string
@@ -45,8 +46,19 @@ export interface CreateProductInput {
 // Payload de edición según updateProductSchema: todos los campos opcionales.
 export type UpdateProductInput = Partial<CreateProductInput>
 
+// Proyección agregada del dashboard: GET /products/summary → { total, totalStock, lowStock }.
+// Es un caso de uso distinto del listado (agregados, no filas): traer todos
+// los productos al cliente para sumar stock no escala.
+export interface ProductSummary {
+  total: number
+  totalStock: number
+  lowStock: number
+}
+
 export const productsApi = {
-  list(params: ListProductsParams = {}): Promise<Product[]> {
+  // Listado paginado: { data, total } — data es la página, total es el conteo
+  // global (un KPI del dashboard NO se deriva de data.length).
+  list(params: ListProductsParams = {}): Promise<Paginated<Product>> {
     const query = new URLSearchParams()
     if (params.search) query.set('search', params.search)
     if (params.category) query.set('category', params.category)
@@ -59,6 +71,10 @@ export const productsApi = {
 
     const qs = query.toString()
     return api(`/products${qs ? `?${qs}` : ''}`, { headers: authHeaders() })
+  },
+
+  summary(): Promise<ProductSummary> {
+    return api('/products/summary', { headers: authHeaders() })
   },
 
   getById(id: string): Promise<Product> {

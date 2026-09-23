@@ -15,6 +15,15 @@ export const testProducts = [
   { id: 'p4', name: 'Pintura blanca 4L', sku: 'PIE-1', category: 'Pinturería', price: 45, stock: 390, minStock: 15, active: true },
 ]
 
+// KPIs que GET /products/summary debe devolver sobre el seed (mismo cálculo
+// que el backend: SOLO activos, stock <= minStock como bajo):
+//   total 4 · totalStock 513 · lowStock 2
+export const testSummary = {
+  total: 4,
+  totalStock: 513,
+  lowStock: 2,
+}
+
 export const loginHandlers: HttpHandler[] = [
   http.post('*/auth/login', async ({ request }) => {
     const body = (await request.json()) as { email: string; password: string }
@@ -36,6 +45,15 @@ export const loginHandlers: HttpHandler[] = [
 ]
 
 export const productsHandlers: HttpHandler[] = [
+  // GET /products/summary → agregados { total, totalStock, lowStock }.
+  // Caso de uso distinto del listado: el dashboard no trae filas para sumar.
+  http.get('*/products/summary', () => {
+    return HttpResponse.json(testSummary)
+  }),
+
+  // GET /products → { data, total }: data es la página, total es el conteo
+  // global de la query filtrada (ANTES del recorte de página). Réplica del
+  // count(*) que el backend hace sobre los mismos filtros.
   http.get('*/products', ({ request }) => {
     const url = new URL(request.url)
     let result = testProducts
@@ -56,12 +74,14 @@ export const productsHandlers: HttpHandler[] = [
       })
     }
 
-    const limit = url.searchParams.get('limit')
-    if (limit) {
-      result = result.slice(0, Number(limit))
-    }
+    // Contrato: total se calcula con la query completa ANTES de paginar.
+    const total = result.length
 
-    return HttpResponse.json(result)
+    const page = Number(url.searchParams.get('page') ?? '1')
+    const limit = Number(url.searchParams.get('limit') ?? '20')
+    const data = result.slice((page - 1) * limit, (page - 1) * limit + limit)
+
+    return HttpResponse.json({ data, total })
   }),
 ]
 
@@ -220,17 +240,18 @@ export const movementsHandlers: HttpHandler[] = [
 
     rows = [...rows].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
+    // Contrato: total se calcula sobre la query filtrada ANTES de paginar
+    // (igual que el count(*) del backend).
+    const total = rows.length
+
     const start = (page - 1) * limit
     const pageRows = rows.slice(start, start + limit)
 
     // Redacción server-side: la tabla solo lleva autoría si el rol es ADMIN.
-    return HttpResponse.json(
-      pageRows.map((m) =>
-        role === 'ADMIN'
-          ? m
-          : { ...m, userId: null, userName: null },
-      ),
+    const data = pageRows.map((m) =>
+      role === 'ADMIN' ? m : { ...m, userId: null, userName: null },
     )
+    return HttpResponse.json({ data, total })
   }),
 ]
 

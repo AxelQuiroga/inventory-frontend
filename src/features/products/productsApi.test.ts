@@ -95,6 +95,11 @@ describe('productsApi — mutaciones (contratos backend)', () => {
 
   it('sin token las mutaciones van sin authorization y la API responde 401', async () => {
     clearToken()
+    // El 401 global redirige a /login: en tests el assign real no existe.
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, assign: () => {} },
+      writable: true,
+    })
     server.use(
       http.post('*/products', ({ request }) => {
         expect(request.headers.get('authorization')).toBeNull()
@@ -105,5 +110,40 @@ describe('productsApi — mutaciones (contratos backend)', () => {
     await expect(
       productsApi.create({ name: 'X', sku: 'Y', category: 'C', price: 1 }),
     ).rejects.toMatchObject({ status: 401, message: 'Unauthorized' })
+  })
+})
+
+describe('productsApi — contrato { data, total } y summary (el handler global replica el server)', () => {
+  beforeEach(() => {
+    saveToken(TOKEN) // los handlers globales de /products y /products/summary no exigen rol
+  })
+
+  it('list devuelve { data, total } con el seed completo (4 productos)', async () => {
+    const list = await productsApi.list()
+
+    expect(list.data).toHaveLength(4)
+    expect(list.total).toBe(4) // total NO es data.length por casualidad: es el conteo global
+  })
+
+  it('list respeta limite de página pero total queda global', async () => {
+    const list = await productsApi.list({ limit: 2 })
+
+    expect(list.data).toHaveLength(2)
+    expect(list.total).toBe(4) // 4 en total aunque la página traiga 2
+  })
+
+  it('summary devuelve los agregados que alimentan los KPIs del dashboard', async () => {
+    const summary = await productsApi.summary()
+
+    expect(summary).toEqual({ total: 4, totalStock: 513, lowStock: 2 })
+  })
+
+  it('sin token GET /products/summary responde 401', async () => {
+    clearToken()
+    server.use(
+      http.get('*/products/summary', () => HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })),
+    )
+
+    await expect(productsApi.summary()).rejects.toMatchObject({ status: 401 })
   })
 })

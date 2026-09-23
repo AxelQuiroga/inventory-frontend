@@ -67,8 +67,9 @@ describe('DashboardPage', () => {
   })
 
   it('con el API vacío muestra KPIs en cero', async () => {
-    server.use(http.get('*/products', () => HttpResponse.json([])))
-    server.use(http.get('*/movements', () => HttpResponse.json([])))
+    server.use(http.get('*/products/summary', () => HttpResponse.json({ total: 0, totalStock: 0, lowStock: 0 })))
+    server.use(http.get('*/products', () => HttpResponse.json({ data: [], total: 0 })))
+    server.use(http.get('*/movements', () => HttpResponse.json({ data: [], total: 0 })))
     renderPage()
 
     await screen.findByText('Total de productos')

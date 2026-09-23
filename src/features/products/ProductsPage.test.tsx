@@ -48,7 +48,7 @@ describe('ProductsPage — listado y estados', () => {
   })
 
   it('lista vacía muestra un mensaje propio', async () => {
-    server.use(http.get('*/products', () => HttpResponse.json([])))
+    server.use(http.get('*/products', () => HttpResponse.json({ data: [], total: 0 })))
     renderPage()
 
     expect(await screen.findByText(/no hay productos/i)).toBeInTheDocument()
@@ -71,7 +71,7 @@ describe('ProductsPage — búsqueda y filtros (query real del backend)', () => 
     server.use(
       http.get('*/products', ({ request }) => {
         capturedUrl = request.url
-        return HttpResponse.json([testProducts[0]])
+        return HttpResponse.json({ data: [testProducts[0]], total: 1 })
       }),
     )
     renderPage()
@@ -92,7 +92,8 @@ describe('ProductsPage — búsqueda y filtros (query real del backend)', () => 
     server.use(
       http.get('*/products', ({ request }) => {
         capturedUrl = request.url
-        return HttpResponse.json(testProducts.filter((p) => p.stock <= p.minStock))
+        const filtered = testProducts.filter((p) => p.stock <= p.minStock)
+        return HttpResponse.json({ data: filtered, total: filtered.length })
       }),
     )
     await user.click(screen.getByRole('checkbox', { name: /solo stock bajo/i }))
@@ -111,7 +112,8 @@ describe('ProductsPage — búsqueda y filtros (query real del backend)', () => 
     server.use(
       http.get('*/products', ({ request }) => {
         capturedUrl = request.url
-        return HttpResponse.json([...testProducts, { ...testProducts[0], id: 'p9', sku: 'MAR-9', active: false }])
+        const withInactive = [...testProducts, { ...testProducts[0], id: 'p9', sku: 'MAR-9', active: false }]
+        return HttpResponse.json({ data: withInactive, total: withInactive.length })
       }),
     )
     await user.click(screen.getByRole('checkbox', { name: /ver inactivos/i }))
@@ -134,9 +136,9 @@ describe('ProductsPage — ordenamiento por columnas (sortBy/order del backend)'
         const url = new URL(request.url)
         if (url.searchParams.get('sortBy') === 'stock') {
           const sorted = [...testProducts].sort((a, b) => a.stock - b.stock)
-          return HttpResponse.json(url.searchParams.get('order') === 'desc' ? sorted.reverse() : sorted)
+          return HttpResponse.json({ data: url.searchParams.get('order') === 'desc' ? sorted.reverse() : sorted, total: testProducts.length })
         }
-        return HttpResponse.json(testProducts)
+        return HttpResponse.json({ data: testProducts, total: testProducts.length })
       }),
     )
     renderPage()
@@ -165,9 +167,9 @@ describe('ProductsPage — ordenamiento por columnas (sortBy/order del backend)'
         const url = new URL(request.url)
         if (url.searchParams.get('sortBy') === 'stock') {
           const sorted = [...testProducts].sort((a, b) => a.stock - b.stock)
-          return HttpResponse.json(url.searchParams.get('order') === 'desc' ? sorted.reverse() : sorted)
+          return HttpResponse.json({ data: url.searchParams.get('order') === 'desc' ? sorted.reverse() : sorted, total: testProducts.length })
         }
-        return HttpResponse.json(testProducts)
+        return HttpResponse.json({ data: testProducts, total: testProducts.length })
       }),
     )
     renderPage()
@@ -193,7 +195,7 @@ describe('ProductsPage — ordenamiento por columnas (sortBy/order del backend)'
     server.use(
       http.get('*/products', ({ request }) => {
         requested.push(new URL(request.url).search)
-        return HttpResponse.json(testProducts)
+        return HttpResponse.json({ data: testProducts, total: testProducts.length })
       }),
     )
     renderPage()
@@ -214,7 +216,7 @@ describe('ProductsPage — ordenamiento por columnas (sortBy/order del backend)'
     server.use(
       http.get('*/products', ({ request }) => {
         capturedUrl = request.url
-        return HttpResponse.json(testProducts)
+        return HttpResponse.json({ data: testProducts, total: testProducts.length })
       }),
     )
     renderPage()
@@ -308,7 +310,7 @@ describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {
     // El mock simula el estado real del server: el POST muta lo que devuelve el GET
     let active = true
     server.use(
-      http.get('*/products', () => HttpResponse.json([{ ...testProducts[0], active }])),
+      http.get('*/products', () => HttpResponse.json({ data: [{ ...testProducts[0], active }], total: 1 })),
       http.post('*/products/:id/deactivate', () => {
         deactivateCalled = true
         active = false
@@ -357,7 +359,7 @@ describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {
     let reactivateCalled = false
     let active = false
     server.use(
-      http.get('*/products', () => HttpResponse.json([{ ...testProducts[0], active }])),
+      http.get('*/products', () => HttpResponse.json({ data: [{ ...testProducts[0], active }], total: 1 })),
       http.post('*/products/:id/reactivate', () => {
         reactivateCalled = true
         active = true

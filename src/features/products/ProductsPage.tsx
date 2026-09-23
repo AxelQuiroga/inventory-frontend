@@ -28,7 +28,7 @@ function useProductList(searchParams: URLSearchParams) {
     try {
       const params = Object.fromEntries(searchParams.entries()) as ListProductsParams
       const list = await productsApi.list(params)
-      setProducts(list) // setState en callback async: fuera del render, sin warning
+      setProducts(list.data) // setState en callback async: fuera del render, sin warning
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor')
     }
@@ -41,7 +41,7 @@ function useProductList(searchParams: URLSearchParams) {
       try {
         const params = Object.fromEntries(searchParams.entries()) as ListProductsParams
         const list = await productsApi.list(params)
-        if (!cancelled) setProducts(list)
+        if (!cancelled) setProducts(list.data)
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor')

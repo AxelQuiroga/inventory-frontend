@@ -4,10 +4,11 @@ import { Alert, Badge, Button, Card, EmptyState, PageHeader, Spinner, Table } fr
 import { ApiError } from '../../shared/api/api'
 import { productsApi, type Product } from '../products/productsApi'
 import { movementsApi, type Movement } from './movementsApi'
+import type { Paginated } from '../../shared/api/paginated'
 import './movement-history-page.css'
 
-// El server pagina con page/limit: el cliente muestra una página a la vez.
-// Una página "llena" (== tamaño) puede tener más atrás → Siguiente habilitado.
+// El server pagina con page/limit y el contrato expone { data, total }:
+// "Siguiente" se decide con el total exacto, no adivinando por tamaño de página.
 const HISTORY_PAGE_SIZE = 20
 
 // Historial por producto: lectura para cualquier rol autenticado.
@@ -18,7 +19,7 @@ export function MovementHistoryPage() {
   const { productId } = useParams()
 
   const [product, setProduct] = useState<Product | null>(null)
-  const [history, setHistory] = useState<Movement[] | null>(null)
+  const [history, setHistory] = useState<Paginated<Movement> | null>(null)
   const [page, setPage] = useState(1)
   const [error, setError] = useState<string | null>(null)
 
@@ -83,7 +84,7 @@ export function MovementHistoryPage() {
         <span>Stock actual: {product.stock}</span>
       </Card>
 
-      {history.length === 0 ? (
+      {history.data.length === 0 ? (
         <EmptyState
           title="Sin movimientos registrados"
           description="Cuando se registren entradas o salidas de este producto, van a aparecer acá."
@@ -101,7 +102,7 @@ export function MovementHistoryPage() {
               </Table.Row>
             </Table.Head>
             <Table.Body>
-              {history.map((m) => (
+              {history.data.map((m) => (
                 <Table.Row key={m.id}>
                   <Table.Td>{new Date(m.createdAt).toLocaleString()}</Table.Td>
                   <Table.Td>
@@ -127,7 +128,8 @@ export function MovementHistoryPage() {
             <Button
               variant="secondary"
               onClick={() => setPage((p) => p + 1)}
-              disabled={history.length < HISTORY_PAGE_SIZE}
+              // Con total exacto: hay página siguiente si todavía no la pasamos.
+              disabled={page * HISTORY_PAGE_SIZE >= history.total}
             >
               Siguiente
             </Button>

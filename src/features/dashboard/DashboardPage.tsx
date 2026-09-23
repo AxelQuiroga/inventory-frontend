@@ -19,26 +19,28 @@ export function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // KPIs con los endpoints existentes:
-    //  - total de productos (activos): GET /products?limit=1000 → array.length
-    //    (limitación: sin metadata de paginación en el contrato, válido hasta 1000)
-    //  - stock bajo: GET /products?lowStock=true → array.length
-    //  - stock total: suma del mismo listado
-    //  - movimientos globales: GET /movements?limit=1000 → array.length (misma
-    //    limitación; la redacción de autoría es server-side, aquí solo cuenta)
-    const all = productsApi.list({ limit: 1000 })
-    const low = productsApi.list({ lowStock: true })
-    const movements = movementsApi.list({ limit: 1000 })
+    // KPIs desde el contrato { data, total } + agregados del server:
+    //  - total de productos (activos): GET /products/summary → total
+    //  - stock bajo: GET /products/summary → lowStock (contado server-side,
+    //    no derivado de un listado traído al cliente)
+    //  - stock total: GET /products/summary → totalStock (agregado SQL; traer
+    //    todos los productos y sumar en el cliente no escala)
+    //  - movimientos globales: GET /movements?limit=1 → total (conteo exacto,
+    //    sin depender de traer filas para contarlas)
+    //  - recientes: GET /products?limit=5 → data (5 filas, no 1000)
+    const summary = productsApi.summary()
+    const movements = movementsApi.list({ limit: 1 })
+    const recent = productsApi.list({ limit: 5 })
 
-    Promise.all([all, low, movements])
-      .then(([allList, lowList, movementsList]) => {
+    Promise.all([summary, movements, recent])
+      .then(([summaryData, movementsPage, recentPage]) => {
         setTotals({
-          total: allList.length,
-          lowStock: lowList.length,
-          stock: allList.reduce((sum, p) => sum + p.stock, 0),
-          movements: movementsList.length,
+          total: summaryData.total,
+          lowStock: summaryData.lowStock,
+          stock: summaryData.totalStock,
+          movements: movementsPage.total,
         })
-        setRecent(allList.slice(0, 5))
+        setRecent(recentPage.data)
       })
       .catch((err: unknown) =>
         setError(err instanceof ApiError ? err.message : 'No se pudo conectar con el servidor'),

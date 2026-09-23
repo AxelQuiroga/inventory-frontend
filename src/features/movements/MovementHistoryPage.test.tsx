@@ -46,7 +46,9 @@ beforeEach(() => {
         price: 25.5, stock: 26, minStock: 5, active: true,
       }),
     ),
-    http.get('*/movements/history/:productId', () => HttpResponse.json(HISTORY)),
+    http.get('*/movements/history/:productId', () =>
+      HttpResponse.json({ data: HISTORY, total: HISTORY.length }),
+    ),
   )
 })
 
@@ -80,7 +82,7 @@ describe('MovementHistoryPage', () => {
   })
 
   it('historial vacío muestra un mensaje propio', async () => {
-    server.use(http.get('*/movements/history/:productId', () => HttpResponse.json([])))
+    server.use(http.get('*/movements/history/:productId', () => HttpResponse.json({ data: [], total: 0 })))
     renderAt()
 
     expect(await screen.findByText(/sin movimientos/i)).toBeInTheDocument()
@@ -119,7 +121,9 @@ describe('MovementHistoryPage', () => {
         requestedPage.push(url.searchParams.get('page') ?? '1')
         const page = Number(url.searchParams.get('page') ?? 1)
         const limit = Number(url.searchParams.get('limit') ?? 20)
-        return HttpResponse.json(HISTORY_PAGED.slice((page - 1) * limit, page * limit))
+        const data = HISTORY_PAGED.slice((page - 1) * limit, page * limit)
+        // total es el conteo global, ANTES del recorte de página.
+        return HttpResponse.json({ data, total: HISTORY_PAGED.length })
       }),
     )
     renderAt()

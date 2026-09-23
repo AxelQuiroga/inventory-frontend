@@ -119,7 +119,7 @@ describe('MovementsPage — sin movimientos (estado vacío global)', () => {
   })
 
   it('muestra el EmptyState global cuando el listado viene vacío', async () => {
-    server.use(http.get('*/movements', () => HttpResponse.json([])))
+    server.use(http.get('*/movements', () => HttpResponse.json({ data: [], total: 0 })))
     renderPage()
 
     expect(await screen.findByText('Sin movimientos registrados')).toBeInTheDocument()

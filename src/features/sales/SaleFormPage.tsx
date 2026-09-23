@@ -40,7 +40,7 @@ export function SaleFormPage() {
     productsApi
       .list({ limit: 100 })
       .then((list) => {
-        if (!cancelled) setProducts(list)
+        if (!cancelled) setProducts(list.data)
       })
       .catch((err: unknown) => {
         if (!cancelled) {

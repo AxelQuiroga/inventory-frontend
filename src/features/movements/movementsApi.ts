@@ -1,5 +1,6 @@
 import { api } from '../../shared/api/api'
 import { getToken } from '../auth/tokenStore'
+import type { Paginated } from '../../shared/api/paginated'
 
 export interface Movement {
   id: string
@@ -59,8 +60,9 @@ export const movementsApi = {
 
   // Historial de un producto: lectura para cualquier rol autenticado.
   // El server lo devuelve ordenado más-reciente-primero y pagina con
-  // page/limit (defaults 1/20; limit máx 100).
-  history(productId: string, params: { page?: number; limit?: number } = {}): Promise<Movement[]> {
+  // page/limit (defaults 1/20; limit máx 100). Contrato { data, total }:
+  // data es la página, total es el conteo global (no se recorta con limit).
+  history(productId: string, params: { page?: number; limit?: number } = {}): Promise<Paginated<Movement>> {
     const query = new URLSearchParams()
     if (params.page !== undefined) query.set('page', String(params.page))
     if (params.limit !== undefined) query.set('limit', String(params.limit))
@@ -71,7 +73,7 @@ export const movementsApi = {
   // Vista global: mismo orden (más reciente primero) y paginación, con los
   // filtros del contrato. userId solo es parte del contrato para el ADMIN;
   // el frontend no lo envía (el backend igual lo descarta para otros roles).
-  list(params: ListMovementsParams = {}): Promise<GlobalMovement[]> {
+  list(params: ListMovementsParams = {}): Promise<Paginated<GlobalMovement>> {
     const query = new URLSearchParams()
     if (params.page !== undefined) query.set('page', String(params.page))
     if (params.limit !== undefined) query.set('limit', String(params.limit))
