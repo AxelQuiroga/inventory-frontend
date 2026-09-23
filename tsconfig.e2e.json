@@ -1,0 +1,22 @@
+{
+  // Typecheck del e2e (Playwright) por separado de la app: corre en Node,
+  // así que necesita types de node, y vive fuera de src/ para no entrar en
+  // el tsconfig.app (types: ["vite/client"]). Chequeo con:
+  //   npx tsc -p tsconfig.e2e.json
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "allowImportingTsExtensions": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["e2e/**/*.ts", "playwright.config.ts"]
+}
