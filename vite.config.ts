@@ -12,6 +12,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ['src/test/setup.ts'],
     css: false,
+    // Los e2e de Playwright viven en e2e/*.spec.ts: si no se excluyen, vitest
+    // intenta cargarlos como suites (fallan: imports de @playwright/test y
+    // orquestación de servidores) y el run reporta "Failed Suites".
+    exclude: ['e2e/**', 'node_modules/**', 'dist/**'],
     // Misma base URL que dev (del .env.example): hace determinísticas las
     // aserciones de URL en los tests del api client.
     env: { VITE_API_URL: 'http://localhost:3000' },
