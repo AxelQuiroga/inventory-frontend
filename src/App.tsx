@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router'
 import { Layout } from './shared/layout/Layout'
 import { LoginPage } from './features/auth/LoginPage'
 import { ProtectedRoute } from './features/auth/ProtectedRoute'
@@ -6,14 +6,22 @@ import { RoleRoute } from './features/auth/RoleRoute'
 import { DashboardPage } from './features/dashboard/DashboardPage'
 import { ProductsPage } from './features/products/ProductsPage'
 import { ProductFormPage } from './features/products/ProductFormPage'
+import { ProductDetailPage } from './features/products/ProductDetailPage'
 import { MovementFormPage } from './features/movements/MovementFormPage'
-import { MovementHistoryPage } from './features/movements/MovementHistoryPage'
 import { MovementsPage } from './features/movements/MovementsPage'
 import { SaleListPage } from './features/sales/SaleListPage'
 import { SaleFormPage } from './features/sales/SaleFormPage'
 import { SaleDetailPage } from './features/sales/SaleDetailPage'
 import { UserListPage } from './features/users/UserListPage'
 import { UserFormPage } from './features/users/UserFormPage'
+
+// Redirect de la ruta vieja del historial (/products/:productId/history) al
+// detalle, donde el historial ahora vive embebido. Navigate no interpola
+// params, así que el destino se arma con useParams.
+function HistoryRedirect() {
+  const { productId } = useParams()
+  return <Navigate to={`/products/${productId}`} replace />
+}
 
 export default function App() {
   return (
@@ -37,6 +45,12 @@ export default function App() {
               </RoleRoute>
             }
           />
+          {/* Detalle: lectura para cualquier rol autenticado (la ruta del
+              historial vieja redirige acá: el historial vive embebido en la
+              ficha). Navigate no interpola params, por eso el redirect es un
+              componente chico con useParams. */}
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/products/:productId/history" element={<HistoryRedirect />} />
           <Route
             path="/products/:id/edit"
             element={
@@ -53,8 +67,6 @@ export default function App() {
               </RoleRoute>
             }
           />
-          {/* Historial: lectura, cualquier rol autenticado */}
-          <Route path="/products/:productId/history" element={<MovementHistoryPage />} />
           {/* Movimientos globales: lectura, cualquier rol autenticado (la
               autoría viaja solo para ADMIN según la política de visibilidad) */}
           <Route path="/movements" element={<MovementsPage />} />

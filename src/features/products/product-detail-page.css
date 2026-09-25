@@ -1,0 +1,83 @@
+.ProductDetail-card {
+  margin-bottom: var(--space-5);
+}
+
+.ProductDetail-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.ProductDetail-name {
+  font-size: 1.35rem;
+}
+
+.ProductDetail-badges {
+  display: inline-flex;
+  gap: var(--space-2);
+}
+
+.ProductDetail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-4);
+  margin: 0 0 var(--space-5);
+}
+
+.ProductDetail-item dt {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.ProductDetail-item dd {
+  margin: var(--space-1) 0 0;
+  font-weight: 600;
+}
+
+.ProductDetail-description {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.ProductDetail-description h3,
+.ProductDetail-sectionTitle {
+  font-size: var(--font-size-md);
+  margin: 0 0 var(--space-2);
+}
+
+.ProductDetail-muted {
+  color: var(--color-text-muted);
+}
+
+.ProductDetail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.ProductDetail-section {
+  margin-top: var(--space-5);
+}
+
+.ProductDetail-pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.ProductDetail-page-indicator {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.ProductDetail-back {
+  display: inline-block;
+  margin-top: var(--space-4);
+  color: var(--color-primary);
+}

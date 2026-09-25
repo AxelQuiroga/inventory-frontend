@@ -220,7 +220,13 @@ export function ProductsPage() {
               <Table.Row key={p.id}>
                 <Table.Td>{p.sku}</Table.Td>
                 <Table.Td>
-                  {p.name} {!p.active && <Badge tone="neutral">Inactivo</Badge>}
+                  {/* El nombre es la puerta de entrada al detalle (ficha +
+                      historial embebido); la descripción se ve ahí, no en el
+                      listado. */}
+                  <Link to={`/products/${p.id}`} className="Products-name">
+                    {p.name}
+                  </Link>{' '}
+                  {!p.active && <Badge tone="neutral">Inactivo</Badge>}
                 </Table.Td>
                 <Table.Td>
                   {p.stock} {p.stock <= p.minStock && <Badge tone="warning">Stock bajo</Badge>}
@@ -228,11 +234,12 @@ export function ProductsPage() {
                 <Table.Td align="right">{p.price}</Table.Td>
                 {/* Menú de acciones por fila: los items visibles dependen del
                     rol (lectura para todos, escritura según la matriz del
-                    backend). Entrada y Salida apuntan a la misma ruta: el
+                    backend). Ver detalle lleva a la ficha con el historial
+                    embebido; Entrada y Salida apuntan a la misma ruta: el
                     tipo se elige dentro del formulario de movimiento. */}
                 <Table.Td>
                   <Menu buttonLabel={`Acciones de ${p.name}`} disabled={busyId === p.id}>
-                    <Menu.Item to={`/products/${p.id}/history`}>Ver historial</Menu.Item>
+                    <Menu.Item to={`/products/${p.id}`}>Ver detalle</Menu.Item>
                     {canMoveStock && (
                       <>
                         <Menu.Item to={`/products/${p.id}/movement`}>Entrada</Menu.Item>

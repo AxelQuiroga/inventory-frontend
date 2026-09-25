@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { server } from '../../test/test-utils'
 import { testProducts } from '../../test/msw-handlers'
 import { ProductsPage } from './ProductsPage'
-import { saveToken, clearToken } from '../auth/tokenStore'
+import { saveToken } from '../auth/tokenStore'
 
 function tokenFor(role: string) {
   return `x.${btoa(JSON.stringify({ email: 'a@b.c', role }))}.y`
@@ -287,24 +287,24 @@ describe('ProductsPage — RBAC visible', () => {
     expect(within(menu).getByRole('menuitem', { name: 'Salida' })).toBeInTheDocument()
   })
 
-  it('el item Ver historial apunta a la ruta del historial del producto', async () => {
-    // Lectura: el backend permite history a todos los roles
+  it('el item Ver detalle apunta a la ficha del producto', async () => {
+    // Lectura: el detalle es accesible para cualquier rol autenticado
     const user = userEvent.setup()
     renderPage()
     await screen.findByText('Martillo')
     await user.click(screen.getByRole('button', { name: /acciones de martillo/i }))
     const menu = screen.getByRole('menu')
-    const historial = within(menu).getByRole('menuitem', { name: 'Ver historial' })
-    expect(historial).toHaveAttribute('href', expect.stringMatching(/\/products\/.+\/history$/))
+    const item = within(menu).getByRole('menuitem', { name: 'Ver detalle' })
+    expect(item).toHaveAttribute('href', '/products/p1')
   })
 
-  it('VIEWER también ve Ver historial en el menú de cada fila', async () => {
+  it('VIEWER también ve Ver detalle en el menú de cada fila', async () => {
     const user = userEvent.setup()
     saveToken(tokenFor('VIEWER'))
     renderPage()
     await screen.findByText('Martillo')
     await user.click(screen.getByRole('button', { name: /acciones de martillo/i }))
-    expect(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Ver historial' })).toBeInTheDocument()
+    expect(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Ver detalle' })).toBeInTheDocument()
   })
 })
 
