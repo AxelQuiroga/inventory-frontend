@@ -98,7 +98,9 @@ export function SaleListPage() {
                 </Table.Td>
                 <Table.Td align="right">{formatMoney(sale.total)}</Table.Td>
                 <Table.Td>
-                  <Link to={`/sales/${sale.id}`}>Ver detalle</Link>
+                  <Link to={`/sales/${sale.id}`}>
+                    <Button variant="ghost">Ver detalle</Button>
+                  </Link>
                 </Table.Td>
               </Table.Row>
             ))}

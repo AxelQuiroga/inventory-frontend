@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
-import { Alert, Badge, Button, ConfirmDialog, EmptyState, Input, PageHeader, Spinner, Table } from '../../shared/ui'
+import { Alert, Badge, Button, ConfirmDialog, EmptyState, Input, Menu, PageHeader, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { getSessionUser } from '../auth/session'
 import { productsApi, type Product, type ListProductsParams } from './productsApi'
@@ -212,9 +212,7 @@ export function ProductsPage() {
                   Precio{sortIndicator('price')}
                 </button>
               </Table.Th>
-              <Table.Th>Historial</Table.Th>
-              {canMoveStock && <Table.Th>Movimientos</Table.Th>}
-              {isAdmin && <Table.Th>Acciones</Table.Th>}
+              <Table.Th>Acciones</Table.Th>
             </Table.Row>
           </Table.Head>
           <Table.Body>
@@ -228,36 +226,32 @@ export function ProductsPage() {
                   {p.stock} {p.stock <= p.minStock && <Badge tone="warning">Stock bajo</Badge>}
                 </Table.Td>
                 <Table.Td align="right">{p.price}</Table.Td>
-                {/* Lectura: cualquier rol autenticado */}
+                {/* Menú de acciones por fila: los items visibles dependen del
+                    rol (lectura para todos, escritura según la matriz del
+                    backend). Entrada y Salida apuntan a la misma ruta: el
+                    tipo se elige dentro del formulario de movimiento. */}
                 <Table.Td>
-                  <Link to={`/products/${p.id}/history`}>Historial</Link>
-                </Table.Td>
-                {canMoveStock && (
-                  <Table.Td>
-                    <div className="Products-actions">
-                      <Link to={`/products/${p.id}/movement`}>Entrada</Link>
-                      <Link to={`/products/${p.id}/movement`}>Salida</Link>
-                    </div>
-                  </Table.Td>
-                )}
-                {isAdmin && (
-                  <Table.Td>
-                    <div className="Products-actions">
-                      <Link to={`/products/${p.id}/edit`}>Editar</Link>
-                      {p.active ? (
+                  <Menu buttonLabel={`Acciones de ${p.name}`} disabled={busyId === p.id}>
+                    <Menu.Item to={`/products/${p.id}/history`}>Ver historial</Menu.Item>
+                    {canMoveStock && (
+                      <>
+                        <Menu.Item to={`/products/${p.id}/movement`}>Entrada</Menu.Item>
+                        <Menu.Item to={`/products/${p.id}/movement`}>Salida</Menu.Item>
+                      </>
+                    )}
+                    {isAdmin && <Menu.Item to={`/products/${p.id}/edit`}>Editar</Menu.Item>}
+                    {isAdmin &&
+                      (p.active ? (
                         // Acción destructiva: pasa por confirmación (evita el
                         // click accidental); la operación corre con loading.
-                        <Button variant="danger" onClick={() => setConfirmTarget(p)}>
+                        <Menu.Item danger onSelect={() => setConfirmTarget(p)}>
                           Desactivar
-                        </Button>
+                        </Menu.Item>
                       ) : (
-                        <Button variant="secondary" loading={busyId === p.id} onClick={() => setActive(p, true)}>
-                          Reactivar
-                        </Button>
-                      )}
-                    </div>
-                  </Table.Td>
-                )}
+                        <Menu.Item onSelect={() => setActive(p, true)}>Reactivar</Menu.Item>
+                      ))}
+                  </Menu>
+                </Table.Td>
               </Table.Row>
             ))}
           </Table.Body>

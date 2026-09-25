@@ -19,3 +19,9 @@ export { EmptyState, type EmptyStateProps } from './EmptyState'
 export { Spinner, type SpinnerProps } from './Spinner'
 export { PageHeader, type PageHeaderProps } from './PageHeader'
 export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog'
+import { Menu as MenuBase, MenuItem } from './Menu'
+
+// Namespace <Menu.Item> compuesto aquí (mismo patrón que Table): el archivo
+// del componente queda solo con exports de componentes (fast refresh).
+export const Menu = Object.assign(MenuBase, { Item: MenuItem })
+export type { MenuProps, MenuItemProps } from './Menu'

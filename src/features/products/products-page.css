@@ -20,12 +20,6 @@
   cursor: pointer;
 }
 
-.Products-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
 .Products-sort {
   background: none;
   border: none;

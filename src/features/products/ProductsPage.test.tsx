@@ -234,72 +234,77 @@ describe('ProductsPage — ordenamiento por columnas (sortBy/order del backend)'
 })
 
 describe('ProductsPage — RBAC visible', () => {
-  it('ADMIN ve link Nuevo producto, Editar y Desactivar/Reactivar', async () => {
+  it('ADMIN ve Nuevo producto y el menú de fila con Editar y Desactivar', async () => {
+    const user = userEvent.setup()
     renderPage()
 
     expect(await screen.findByRole('link', { name: /nuevo producto/i })).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: /editar/i }).length).toBeGreaterThan(0)
-    expect(screen.getAllByRole('button', { name: /desactivar/i }).length).toBeGreaterThan(0)
+    // El listado default tiene un solo Martillo: su fila es la que se prueba
+    await user.click(await screen.findByRole('button', { name: /acciones de martillo/i }))
+    const menu = screen.getByRole('menu')
+    expect(within(menu).getByRole('menuitem', { name: 'Editar' })).toBeInTheDocument()
+    expect(within(menu).getByRole('menuitem', { name: 'Desactivar' })).toBeInTheDocument()
   })
 
-  it('OPERATOR no ve acciones de escritura ni Nuevo producto', async () => {
+  it('OPERATOR no ve Nuevo producto ni escritura, y sí movimiento', async () => {
+    const user = userEvent.setup()
     saveToken(tokenFor('OPERATOR'))
     renderPage()
 
     await screen.findByText('Martillo')
     expect(screen.queryByRole('link', { name: /nuevo producto/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /editar/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /desactivar/i })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /acciones de martillo/i }))
+    const menu = screen.getByRole('menu')
+    expect(within(menu).queryByRole('menuitem', { name: 'Editar' })).not.toBeInTheDocument()
+    expect(within(menu).queryByRole('menuitem', { name: 'Desactivar' })).not.toBeInTheDocument()
+    expect(within(menu).getByRole('menuitem', { name: 'Entrada' })).toBeInTheDocument()
+    expect(within(menu).getByRole('menuitem', { name: 'Salida' })).toBeInTheDocument()
   })
 
-  it('VIEWER tampoco ve acciones de escritura', async () => {
+  it('VIEWER tampoco ve acciones de escritura ni movimiento', async () => {
+    const user = userEvent.setup()
     saveToken(tokenFor('VIEWER'))
     renderPage()
 
     await screen.findByText('Martillo')
-    expect(screen.queryByRole('button', { name: /desactivar/i })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /acciones de martillo/i }))
+    const menu = screen.getByRole('menu')
+    expect(within(menu).queryByRole('menuitem', { name: 'Editar' })).not.toBeInTheDocument()
+    expect(within(menu).queryByRole('menuitem', { name: 'Desactivar' })).not.toBeInTheDocument()
+    expect(within(menu).queryByRole('menuitem', { name: 'Entrada' })).not.toBeInTheDocument()
+    expect(within(menu).queryByRole('menuitem', { name: 'Salida' })).not.toBeInTheDocument()
   })
 
-  it('ADMIN ve links Entrada/Salida por producto', async () => {
+  it('ADMIN ve Entrada y Salida en el menú de cada producto', async () => {
+    const user = userEvent.setup()
     // ADMIN ya está logueado por el beforeEach
     renderPage()
     await screen.findByText('Martillo')
-    expect(screen.getAllByRole('link', { name: /^entrada$/i }).length).toBeGreaterThan(0)
-    expect(screen.getAllByRole('link', { name: /^salida$/i }).length).toBeGreaterThan(0)
+    await user.click(screen.getByRole('button', { name: /acciones de martillo/i }))
+    const menu = screen.getByRole('menu')
+    expect(within(menu).getByRole('menuitem', { name: 'Entrada' })).toBeInTheDocument()
+    expect(within(menu).getByRole('menuitem', { name: 'Salida' })).toBeInTheDocument()
   })
 
-  it('OPERATOR también ve los links de movimiento', async () => {
-    clearToken()
-    saveToken(tokenFor('OPERATOR'))
-    renderPage()
-    await screen.findByText('Martillo')
-    expect(screen.getAllByRole('link', { name: /^entrada$/i }).length).toBeGreaterThan(0)
-    expect(screen.getAllByRole('link', { name: /^salida$/i }).length).toBeGreaterThan(0)
-  })
-
-  it('VIEWER no ve links de movimiento (solo lectura)', async () => {
-    clearToken()
-    saveToken(tokenFor('VIEWER'))
-    renderPage()
-    await screen.findByText('Martillo')
-    expect(screen.queryByRole('link', { name: /^entrada$/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /^salida$/i })).not.toBeInTheDocument()
-  })
-
-  it('el link Historial es visible para cualquier rol autenticado', async () => {
+  it('el item Ver historial apunta a la ruta del historial del producto', async () => {
     // Lectura: el backend permite history a todos los roles
+    const user = userEvent.setup()
     renderPage()
     await screen.findByText('Martillo')
-    expect(screen.getAllByRole('link', { name: /^historial$/i }).length).toBeGreaterThan(0)
-    expect((screen.getAllByRole('link', { name: /^historial$/i }))[0]!.getAttribute('href')).toMatch(
-      /\/products\/.+\/history$/,
-    )
+    await user.click(screen.getByRole('button', { name: /acciones de martillo/i }))
+    const menu = screen.getByRole('menu')
+    const historial = within(menu).getByRole('menuitem', { name: 'Ver historial' })
+    expect(historial).toHaveAttribute('href', expect.stringMatching(/\/products\/.+\/history$/))
+  })
 
-    clearToken()
+  it('VIEWER también ve Ver historial en el menú de cada fila', async () => {
+    const user = userEvent.setup()
     saveToken(tokenFor('VIEWER'))
     renderPage()
     await screen.findByText('Martillo')
-    expect(screen.getAllByRole('link', { name: /^historial$/i }).length).toBeGreaterThan(0)
+    await user.click(screen.getByRole('button', { name: /acciones de martillo/i }))
+    expect(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Ver historial' })).toBeInTheDocument()
   })
 })
 
@@ -319,7 +324,8 @@ describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {
     )
     renderPage()
 
-    await user.click(await screen.findByRole('button', { name: /desactivar/i }))
+    await user.click(await screen.findByRole('button', { name: /acciones de martillo/i }))
+    await user.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Desactivar' }))
 
     // El diálogo aparece con el producto en contexto y aún NO desactiva
     expect(deactivateCalled).toBe(false)
@@ -330,7 +336,10 @@ describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {
     await user.click(within(dialog).getByRole('button', { name: /desactivar/i }))
 
     await waitFor(() => expect(deactivateCalled).toBe(true))
-    expect(await screen.findByRole('button', { name: /reactivar/i })).toBeInTheDocument()
+    // La fila quedó inactiva: al reabrir el menú muestra Reactivar
+    await waitFor(() => expect(screen.getByRole('button', { name: /acciones de martillo/i })).toBeEnabled())
+    await user.click(screen.getByRole('button', { name: /acciones de martillo/i }))
+    expect(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Reactivar' })).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
@@ -345,8 +354,11 @@ describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {
     )
     renderPage()
 
-    // El listado default trae varias filas: tomo el primer botón de fila
-    await user.click((await screen.findAllByRole('button', { name: /desactivar/i }))[0]!)
+    // El listado default trae varias filas: el menú de la fila del Martillo
+    await screen.findByText('Martillo')
+    await user.click(screen.getByRole('button', { name: /acciones de martillo/i }))
+    await user.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Desactivar' }))
+
     const dialog = screen.getByRole('dialog')
     await user.click(within(dialog).getByRole('button', { name: /cancelar/i }))
 
@@ -368,10 +380,14 @@ describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {
     )
     renderPage()
 
-    await user.click(await screen.findByRole('button', { name: /reactivar/i }))
+    await user.click(await screen.findByRole('button', { name: /acciones de martillo/i }))
+    await user.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Reactivar' }))
 
     await waitFor(() => expect(reactivateCalled).toBe(true))
-    expect(await screen.findByRole('button', { name: /desactivar/i })).toBeInTheDocument()
+    // La fila volvió a activa: al reabrir el menú muestra Desactivar
+    await waitFor(() => expect(screen.getByRole('button', { name: /acciones de martillo/i })).toBeEnabled())
+    await user.click(screen.getByRole('button', { name: /acciones de martillo/i }))
+    expect(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Desactivar' })).toBeInTheDocument()
   })
 
   it('consume el mensaje de éxito post/redirect y no lo repite al refrescar', async () => {
@@ -410,7 +426,9 @@ describe('ProductsPage — desactivar y reactivar (ADMIN)', () => {
         HttpResponse.json({ message: 'Forbidden' }, { status: 403 }),
       ),
     )
-    await user.click((await screen.findAllByRole('button', { name: /desactivar/i }))[0]!)
+    await user.click(screen.getByRole('button', { name: /acciones de martillo/i }))
+    await user.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Desactivar' }))
+
     // La acción real se ejecuta al confirmar dentro del diálogo
     const dialog = await screen.findByRole('dialog')
     await user.click(within(dialog).getByRole('button', { name: /desactivar/i }))
