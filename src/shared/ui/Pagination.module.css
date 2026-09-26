@@ -1,0 +1,14 @@
+/* Paginación compartida del design system — reemplaza el patrón de features
+   copiado en Products/ProductDetail/Movements: navegación accesible con el
+   total exacto del contrato paginado (data/total). Solo tokens. */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.indicator {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

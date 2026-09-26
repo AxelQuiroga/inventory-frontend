@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { Alert, Badge, Button, Card, ConfirmDialog, EmptyState, PageHeader, Spinner, Table } from '../../shared/ui'
+import { Alert, Badge, Button, Card, ConfirmDialog, EmptyState, PageHeader, Pagination, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { getSessionUser } from '../auth/session'
 import { productsApi, type Product } from './productsApi'
 import { movementsApi, type Movement } from '../movements/movementsApi'
 import type { Paginated } from '../../shared/api/paginated'
-import './product-detail-page.css'
+import styles from './ProductDetailPage.module.css'
 
 // El server pagina con page/limit y el contrato expone { data, total }:
 // "Siguiente" se decide con el total exacto, no adivinando por tamaño de página.
@@ -105,7 +105,7 @@ export function ProductDetailPage() {
       <>
         <PageHeader title="Detalle de producto" />
         <Alert tone="error">{productError}</Alert>
-        <Link to="/products" className="ProductDetail-back">
+        <Link to="/products" className={styles.back}>
           Volver a productos
         </Link>
       </>
@@ -122,37 +122,37 @@ export function ProductDetailPage() {
           sobre la ficha intacta: la pantalla no se pierde por un fallo. */}
       {productError && <Alert tone="error">{productError}</Alert>}
 
-      <Card className="ProductDetail-card">
-        <div className="ProductDetail-head">
-          <strong className="ProductDetail-name">{product.name}</strong>
-          <div className="ProductDetail-badges">
+      <Card className={styles.card}>
+        <div className={styles.head}>
+          <strong className={styles.name}>{product.name}</strong>
+          <div className={styles.badges}>
             {!product.active && <Badge tone="neutral">Inactivo</Badge>}
             {product.stock <= product.minStock && <Badge tone="warning">Stock bajo</Badge>}
           </div>
         </div>
 
-        <dl className="ProductDetail-grid">
-          <div className="ProductDetail-item">
+        <dl className={styles.grid}>
+          <div className={styles.item}>
             <dt>SKU</dt>
             <dd>{product.sku}</dd>
           </div>
-          <div className="ProductDetail-item">
+          <div className={styles.item}>
             <dt>Categoría</dt>
             <dd>{product.category}</dd>
           </div>
-          <div className="ProductDetail-item">
+          <div className={styles.item}>
             <dt>Precio</dt>
             <dd>{formatMoney(product.price)}</dd>
           </div>
-          <div className="ProductDetail-item">
+          <div className={styles.item}>
             <dt>Stock actual</dt>
             <dd>{product.stock}</dd>
           </div>
-          <div className="ProductDetail-item">
+          <div className={styles.item}>
             <dt>Stock mínimo</dt>
             <dd>{product.minStock}</dd>
           </div>
-          <div className="ProductDetail-item">
+          <div className={styles.item}>
             <dt>Estado</dt>
             <dd>{product.active ? 'Activo' : 'Inactivo'}</dd>
           </div>
@@ -160,16 +160,16 @@ export function ProductDetailPage() {
 
         {/* El motivo del feature: la descripción se guarda con el producto
             pero el listado no la muestra; acá es un bloque visible. */}
-        <section className="ProductDetail-description">
+        <section className={styles.description}>
           <h3>Descripción</h3>
-          <p className={product.description ? '' : 'ProductDetail-muted'}>
+          <p className={product.description ? '' : styles.muted}>
             {product.description || 'Sin descripción.'}
           </p>
         </section>
 
         {/* Acciones según la matriz del backend; la desactivación (destructiva)
             pasa por ConfirmDialog, igual que en el listado. */}
-        <div className="ProductDetail-actions">
+        <div className={styles.actions}>
           {isAdmin && (
             <Link to={`/products/${product.id}/edit`}>
               <Button variant="secondary">Editar</Button>
@@ -197,8 +197,8 @@ export function ProductDetailPage() {
         </div>
       </Card>
 
-      <section className="ProductDetail-section">
-        <h3 className="ProductDetail-sectionTitle">Historial de movimientos</h3>
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Historial de movimientos</h3>
 
         {historyError && <Alert tone="error">{historyError}</Alert>}
 
@@ -240,26 +240,16 @@ export function ProductDetailPage() {
               </Table.Body>
             </Table>
 
-            <div className="ProductDetail-pagination">
-              <Button variant="secondary" onClick={() => setPage((p) => p - 1)} disabled={page <= 1}>
-                Anterior
-              </Button>
-              <span className="ProductDetail-page-indicator" aria-live="polite">
-                Página {page}
-              </span>
-              <Button
-                variant="secondary"
-                onClick={() => setPage((p) => p + 1)}
-                // Con total exacto: hay página siguiente si todavía no la pasamos.
-                disabled={page * HISTORY_PAGE_SIZE >= history.total}
-              >
-                Siguiente
-              </Button>
-            </div>
+            <Pagination
+              page={page}
+              total={history.total}
+              pageSize={HISTORY_PAGE_SIZE}
+              onPageChange={(next) => setPage(next)}
+            />
           </>
         )}
 
-        <Link to="/products" className="ProductDetail-back">
+        <Link to="/products" className={styles.back}>
           Volver a productos
         </Link>
       </section>

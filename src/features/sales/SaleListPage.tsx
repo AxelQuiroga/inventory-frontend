@@ -4,7 +4,6 @@ import { Alert, Button, EmptyState, PageHeader, Spinner, Table } from '../../sha
 import { ApiError } from '../../shared/api/api'
 import { getSessionUser } from '../auth/session'
 import { salesApi, type SaleSummary } from './salesApi'
-import './sales-page.css'
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString('es-AR')

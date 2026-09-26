@@ -1,4 +1,4 @@
-.SaleForm-grid {
+.grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
@@ -6,23 +6,23 @@
 }
 
 @media (max-width: 900px) {
-  .SaleForm-grid {
+  .grid {
     grid-template-columns: 1fr;
   }
 }
 
-.SaleForm-card {
+.card {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
 }
 
-.SaleForm-title {
+.title {
   font-size: var(--font-size-lg);
   margin: 0;
 }
 
-.SaleForm-list {
+.list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -33,7 +33,7 @@
   overflow-y: auto;
 }
 
-.SaleForm-product {
+.product {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -44,35 +44,35 @@
 }
 
 @media (max-width: 700px) {
-  .SaleForm-product {
+  .product {
     flex-direction: column;
     align-items: stretch;
   }
 }
 
-.SaleForm-productInfo {
+.productInfo {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
 }
 
-.SaleForm-meta {
+.meta {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }
 
-.SaleForm-add {
+.add {
   display: flex;
   align-items: flex-end;
   gap: var(--space-2);
 }
 
-.SaleForm-add .Input {
+.add :global(.Input) {
   width: 90px;
 }
 
-.SaleForm-cart {
+.cart {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -81,7 +81,7 @@
   gap: var(--space-3);
 }
 
-.SaleForm-cartLine {
+.cartLine {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -92,43 +92,43 @@
 }
 
 @media (max-width: 700px) {
-  .SaleForm-cartLine {
+  .cartLine {
     flex-direction: column;
     align-items: stretch;
   }
 }
 
-.SaleForm-cartLineActions {
+.cartLineActions {
   display: flex;
   align-items: flex-end;
   gap: var(--space-2);
 }
 
-.SaleForm-cartLineActions .Input {
+.cartLineActions :global(.Input) {
   width: 90px;
 }
 
-.SaleForm-total {
+.total {
   margin-top: var(--space-3);
   padding-top: var(--space-3);
   border-top: 1px solid var(--color-border);
   font-size: var(--font-size-lg);
 }
 
-.SaleForm-actions {
+.actions {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
 }
 
-.SaleForm-hint {
+.hint {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   margin: 0;
 }
 
-.SaleForm-empty {
+.empty {
   color: var(--color-text-muted);
   margin: 0;
 }

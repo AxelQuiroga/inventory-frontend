@@ -1,0 +1,10 @@
+/* Vista global de movimientos — scoping del CSS Module (sin prefijos
+   manuales). La vista SOLO posiciona sus filtros: el estilo de los controls
+   vive en shared/ui (Select). */
+.filters {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}

@@ -4,7 +4,7 @@ import { Alert, Badge, Button, Card, EmptyState, Input, PageHeader, Spinner } fr
 import { ApiError } from '../../shared/api/api'
 import { productsApi, type Product } from '../products/productsApi'
 import { salesApi } from './salesApi'
-import './sale-form-page.css'
+import styles from './SaleFormPage.module.css'
 
 // Línea del carrito: el producto completo (para mostrar precio y stock)
 // + la cantidad que el vendedor quiere despachar en esta venta.
@@ -132,9 +132,9 @@ export function SaleFormPage() {
     <>
       <PageHeader title="Nueva venta" description="Seleccioná los productos y la cantidad a vender" />
 
-      <div className="SaleForm-grid">
-        <Card className="SaleForm-card">
-          <h2 className="SaleForm-title">Productos</h2>
+      <div className={styles.grid}>
+        <Card className={styles.card}>
+          <h2 className={styles.title}>Productos</h2>
 
           <Input
             id="search"
@@ -152,7 +152,7 @@ export function SaleFormPage() {
               description="Necesitás productos creados para armar una venta."
             />
           ) : (
-            <ul className="SaleForm-list" aria-label="Productos disponibles">
+            <ul className={styles.list} aria-label="Productos disponibles">
               {visibleProducts.map((product) => {
                 const remaining = available(product)
                 const soldOut = remaining <= 0
@@ -160,16 +160,16 @@ export function SaleFormPage() {
                 // del vendedor contra vender el doble. Se muestra pero
                 // bloqueado (el producto no "desaparece" del catálogo).
                 return (
-                  <li key={product.id} className="SaleForm-product">
-                    <div className="SaleForm-productInfo">
+                  <li key={product.id} className={styles.product}>
+                    <div className={styles.productInfo}>
                       <strong>{product.name}</strong>
-                      <span className="SaleForm-meta">{product.sku}</span>
-                      <span className="SaleForm-meta">
+                      <span className={styles.meta}>{product.sku}</span>
+                      <span className={styles.meta}>
                         Precio: {formatMoney(product.price)} · Disponible: {remaining}
                       </span>
                       {soldOut && <Badge tone="neutral">0 disponibles</Badge>}
                     </div>
-                    <div className="SaleForm-add">
+                    <div className={styles.add}>
                       <Input
                         id={`quantity-${product.id}`}
                         label={`Cantidad de ${product.name}`}
@@ -200,27 +200,27 @@ export function SaleFormPage() {
                   </li>
                 )
               })}
-              {visibleProducts.length === 0 && <li className="SaleForm-empty">Sin resultados para “{search}”</li>}
+              {visibleProducts.length === 0 && <li className={styles.empty}>Sin resultados para “{search}”</li>}
             </ul>
           )}
         </Card>
 
-        <Card className="SaleForm-card">
-          <h2 className="SaleForm-title">Carrito</h2>
+        <Card className={styles.card}>
+          <h2 className={styles.title}>Carrito</h2>
 
           {cart.length === 0 ? (
-            <p className="SaleForm-empty">Todavía no hay productos en esta venta.</p>
+            <p className={styles.empty}>Todavía no hay productos en esta venta.</p>
           ) : (
-            <ul className="SaleForm-cart" aria-label="Líneas de la venta">
+            <ul className={styles.cart} aria-label="Líneas de la venta">
               {cart.map((line) => (
-                <li key={line.product.id} className="SaleForm-cartLine">
-                  <div className="SaleForm-productInfo">
+                <li key={line.product.id} className={styles.cartLine}>
+                  <div className={styles.productInfo}>
                     <strong>{line.product.name}</strong>
-                    <span className="SaleForm-meta">
+                    <span className={styles.meta}>
                       {line.quantity} × {formatMoney(line.product.price)}
                     </span>
                   </div>
-                  <div className="SaleForm-cartLineActions">
+                  <div className={styles.cartLineActions}>
                     <Input
                       id={`cart-quantity-${line.product.id}`}
                       label={`Cantidad de ${line.product.name} en la venta`}
@@ -241,11 +241,11 @@ export function SaleFormPage() {
             </ul>
           )}
 
-          <div className="SaleForm-total" aria-live="polite">
+          <div className={styles.total} aria-live="polite">
             Total: <strong>{formatMoney(total)}</strong>
           </div>
 
-          <div className="SaleForm-actions">
+          <div className={styles.actions}>
             <Button
               loading={submitting}
               disabled={cart.length === 0}
@@ -257,7 +257,7 @@ export function SaleFormPage() {
               Cancelar
             </Button>
           </div>
-          {cart.length === 0 && <p className="SaleForm-hint">Agregá al menos un producto para confirmar.</p>}
+          {cart.length === 0 && <p className={styles.hint}>Agregá al menos un producto para confirmar.</p>}
         </Card>
       </div>
     </>

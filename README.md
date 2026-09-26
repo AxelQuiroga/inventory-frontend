@@ -37,6 +37,15 @@ Reglas de la casa: las features NO se importan entre sí (solo `shared/`); los
 matchers de rol (`ProtectedRoute`, `RoleRoute`) encierran las rutas; el 401
 global limpia la sesión y redirige a `/login`.
 
+## 🎨 CSS — convención del design system
+
+* `shared/ui/tokens.css` es la **única fuente de valores visuales** (colores, spacing, radios, tipografía, sombras, focus). No existen valores mágicos fuera de ahí.
+* Los componentes de `shared/ui` llevan su estilo **co-locado como CSS Module** (`Component.module.css`): scoping real por archivo, sin prefijos manuales de feature.
+* Las vistas/features también usan `.module.css`: si la vista solo posiciona, el archivo es chico — el estilo de los controles vive en `shared/ui`.
+* **Regla de oro: un patrón que se repite 2 veces es de `shared/ui`.** Filtros, paginación, estados vacíos, etc. nunca se copian entre features.
+* Los controles nativos (select, input…) **no se usan crudos**: pasan por el componente del design system (`Select`, `Input`).
+* Los componentes legacy en `ui.css` (clases planas globales) se migran a módulos cuando se tocan: no se agranda `ui.css`.
+
 ## 🚀 Instalación
 
 ```bash
@@ -55,7 +64,7 @@ Requiere el backend corriendo (`npm run dev` en inventory-backend).
 ## 🧪 Testing
 
 ```bash
-npm test               # Unit: Vitest + Testing Library (174 tests)
+npm test               # Unit: Vitest + Testing Library (201 tests)
 npm run test:e2e       # E2E: Playwright contra backend real + TEST DB
                        # (levanta vite en 4310 y el backend e2e en 3210; TEST DB arriba)
 npm run typecheck:e2e  # Typecheck del dir e2e/

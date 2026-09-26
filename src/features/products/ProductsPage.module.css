@@ -1,4 +1,4 @@
-.Products-filters {
+.filters {
   display: flex;
   align-items: flex-end;
   gap: var(--space-3);
@@ -6,11 +6,11 @@
   margin-bottom: var(--space-4);
 }
 
-.Products-filters .Input-wrapper {
+.filters :global(.Input-wrapper) {
   min-width: 220px;
 }
 
-.Products-check {
+.check {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -20,17 +20,17 @@
   cursor: pointer;
 }
 
-.Products-name {
+.name {
   color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
 }
 
-.Products-name:hover {
+.name:hover {
   text-decoration: underline;
 }
 
-.Products-sort {
+.sort {
   background: none;
   border: none;
   padding: 0;
@@ -40,6 +40,6 @@
   white-space: nowrap;
 }
 
-.Products-sort:hover {
+.sort:hover {
   color: var(--color-primary);
 }

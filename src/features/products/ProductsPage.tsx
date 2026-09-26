@@ -4,7 +4,7 @@ import { Alert, Badge, Button, ConfirmDialog, EmptyState, Input, Menu, PageHeade
 import { ApiError } from '../../shared/api/api'
 import { getSessionUser } from '../auth/session'
 import { productsApi, type Product, type ListProductsParams } from './productsApi'
-import './products-page.css'
+import styles from './ProductsPage.module.css'
 
 // RBAC visible, leído en cada render: la sesión vive en el token persistido.
 //  - escritura de productos: ADMIN (create/update/deactivate/reactivate)
@@ -130,7 +130,7 @@ export function ProductsPage() {
         action={isAdmin ? <Link to="/products/new"><Button>Nuevo producto</Button></Link> : undefined}
       />
 
-      <div className="Products-filters">
+      <div className={styles.filters}>
         <Input
           id="search"
           label="Buscar"
@@ -142,7 +142,7 @@ export function ProductsPage() {
           Buscar
         </Button>
 
-        <label className="Products-check">
+        <label className={styles.check}>
           <input
             type="checkbox"
             checked={searchParams.get('lowStock') === 'true'}
@@ -153,7 +153,7 @@ export function ProductsPage() {
 
         {/* includeInactive es ADMIN-only en el backend */}
         {isAdmin && (
-          <label className="Products-check">
+          <label className={styles.check}>
             <input
               type="checkbox"
               checked={searchParams.get('includeInactive') === 'true'}
@@ -185,7 +185,7 @@ export function ProductsPage() {
               <Table.Th>
                 <button
                   type="button"
-                  className="Products-sort"
+                  className={styles.sort}
                   aria-label="Ordenar por Producto"
                   onClick={() => toggleSort('name')}
                 >
@@ -195,7 +195,7 @@ export function ProductsPage() {
               <Table.Th>
                 <button
                   type="button"
-                  className="Products-sort"
+                  className={styles.sort}
                   aria-label="Ordenar por Stock"
                   onClick={() => toggleSort('stock')}
                 >
@@ -205,7 +205,7 @@ export function ProductsPage() {
               <Table.Th>
                 <button
                   type="button"
-                  className="Products-sort"
+                  className={styles.sort}
                   aria-label="Ordenar por Precio"
                   onClick={() => toggleSort('price')}
                 >
@@ -223,7 +223,7 @@ export function ProductsPage() {
                   {/* El nombre es la puerta de entrada al detalle (ficha +
                       historial embebido); la descripción se ve ahí, no en el
                       listado. */}
-                  <Link to={`/products/${p.id}`} className="Products-name">
+                  <Link to={`/products/${p.id}`} className={styles.name}>
                     {p.name}
                   </Link>{' '}
                   {!p.active && <Badge tone="neutral">Inactivo</Badge>}

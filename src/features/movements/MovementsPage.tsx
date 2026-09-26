@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { Alert, Badge, Button, EmptyState, PageHeader, Spinner, Table } from '../../shared/ui'
+import { Alert, Badge, EmptyState, PageHeader, Pagination, Select, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { getSessionUser } from '../auth/session'
 import { productsApi, type Product } from '../products/productsApi'
 import { movementsApi, type GlobalMovement } from './movementsApi'
 import type { Paginated } from '../../shared/api/paginated'
-import './movements-page.css'
+import styles from './MovementsPage.module.css'
 
 // El server pagina con page/limit y el contrato expone { data, total }:
 // "Siguiente" se decide con el total exacto, no adivinando por tamaño de página.
@@ -88,33 +88,31 @@ export function MovementsPage() {
     <>
       <PageHeader title="Movimientos" description="Todas las entradas y salidas del inventario" />
 
-      <div className="Movements-filters">
-        <label className="Movements-filter">
-          <span>Tipo</span>
-          <select
-            value={searchParams.get('type') ?? ''}
-            onChange={(e) => applyFilter({ type: e.target.value })}
-          >
-            <option value="">Todos</option>
-            <option value="IN">Entrada</option>
-            <option value="OUT">Salida</option>
-          </select>
-        </label>
+      <div className={styles.filters}>
+        <Select
+          id="movement-type"
+          label="Tipo"
+          value={searchParams.get('type') ?? ''}
+          onChange={(e) => applyFilter({ type: e.target.value })}
+        >
+          <option value="">Todos</option>
+          <option value="IN">Entrada</option>
+          <option value="OUT">Salida</option>
+        </Select>
 
-        <label className="Movements-filter">
-          <span>Producto</span>
-          <select
-            value={searchParams.get('productId') ?? ''}
-            onChange={(e) => applyFilter({ productId: e.target.value })}
-          >
-            <option value="">Todos</option>
-            {products.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} ({p.sku})
-              </option>
-            ))}
-          </select>
-        </label>
+        <Select
+          id="movement-product"
+          label="Producto"
+          value={searchParams.get('productId') ?? ''}
+          onChange={(e) => applyFilter({ productId: e.target.value })}
+        >
+          <option value="">Todos</option>
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} ({p.sku})
+            </option>
+          ))}
+        </Select>
       </div>
 
       {error && <Alert tone="error">{error}</Alert>}
@@ -169,26 +167,12 @@ export function MovementsPage() {
             </Table.Body>
           </Table>
 
-          <div className="Movements-pagination">
-            <Button
-              variant="secondary"
-              onClick={() => applyFilter({ page: String(page - 1) })}
-              disabled={page <= 1}
-            >
-              Anterior
-            </Button>
-            <span className="Movements-page-indicator" aria-live="polite">
-              Página {page}
-            </span>
-            <Button
-              variant="secondary"
-              onClick={() => applyFilter({ page: String(page + 1) })}
-              // Con total exacto: hay página siguiente si todavía no la pasamos.
-              disabled={page * MOVEMENTS_PAGE_SIZE >= movements.total}
-            >
-              Siguiente
-            </Button>
-          </div>
+          <Pagination
+            page={page}
+            total={movements.total}
+            pageSize={MOVEMENTS_PAGE_SIZE}
+            onPageChange={(next) => applyFilter({ page: String(next) })}
+          />
         </>
       )}
     </>

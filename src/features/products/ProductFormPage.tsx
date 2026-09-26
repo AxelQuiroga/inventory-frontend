@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { Alert, Button, Card, Input, PageHeader } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { productsApi, type Product } from './productsApi'
-import './product-form-page.css'
+import styles from './ProductFormPage.module.css'
 
 // Modo crear y modo editar en un solo componente: la ruta decide.
 // Crear → POST con createProductSchema; Editar → PUT solo con campos cambiados.
@@ -151,13 +151,13 @@ export function ProductFormPage() {
         }
       />
 
-      <Card className="ProductForm-card">
-        <form onSubmit={handleSubmit} className="ProductForm-form" noValidate>
+      <Card className={styles.card}>
+        <form onSubmit={handleSubmit} noValidate>
           {/* Orden de pensamiento del vendedor: qué vendo y a cuánto →
               cuánto tengo y cuándo avisarme → lo técnico al final. */}
-          <fieldset className="ProductForm-fieldset">
-            <legend className="ProductForm-legend">Datos del producto</legend>
-            <div className="ProductForm-grid">
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>Datos del producto</legend>
+            <div className={styles.grid}>
               <Input
                 id="name"
                 label="Nombre"
@@ -190,9 +190,9 @@ export function ProductFormPage() {
             </div>
           </fieldset>
 
-          <fieldset className="ProductForm-fieldset">
-            <legend className="ProductForm-legend">Inventario</legend>
-            <div className="ProductForm-grid">
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>Inventario</legend>
+            <div className={styles.grid}>
               {/* El stock actual es de creación: viaja al backend como
                   initialStock y entra por un movimiento IN ("Stock inicial").
                   En edición no existe: el stock solo cambia por movimientos. */}
@@ -224,9 +224,9 @@ export function ProductFormPage() {
             </div>
           </fieldset>
 
-          <fieldset className="ProductForm-fieldset">
-            <legend className="ProductForm-legend">Datos adicionales</legend>
-            <div className="ProductForm-grid">
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>Datos adicionales</legend>
+            <div className={styles.grid}>
               <Input
                 id="sku"
                 label="SKU"
@@ -236,11 +236,11 @@ export function ProductFormPage() {
                 required
               />
 
-              <div className="ProductForm-full">
+              <div className={styles.full}>
                 <label className="Input-label" htmlFor="description">Descripción</label>
                 <textarea
                   id="description"
-                  className="Input-field ProductForm-textarea"
+                  className={`Input-field ${styles.textarea}`}
                   value={form.description}
                   onChange={(e) => set('description', e.target.value)}
                 />
@@ -250,7 +250,7 @@ export function ProductFormPage() {
 
           {error && <Alert tone="error">{error}</Alert>}
 
-          <div className="ProductForm-actions">
+          <div className={styles.actions}>
             <Button type="submit" loading={submitting}>
               {editing ? 'Guardar cambios' : 'Crear producto'}
             </Button>

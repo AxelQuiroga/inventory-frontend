@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { Alert, Button, PageHeader, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { salesApi, type Sale } from './salesApi'
-import './sales-page.css'
+import styles from './SaleDetailPage.module.css'
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString('es-AR')
@@ -59,7 +59,7 @@ export function SaleDetailPage() {
 
       {sale && (
         <>
-          <p className="Sales-detailMeta">Registrada el {formatDate(sale.createdAt)}</p>
+          <p className={styles.meta}>Registrada el {formatDate(sale.createdAt)}</p>
 
           <Table>
             <Table.Head>
@@ -84,7 +84,7 @@ export function SaleDetailPage() {
             </Table.Body>
           </Table>
 
-          <p className="Sales-detailTotal">Total: <strong>{formatMoney(sale.total)}</strong></p>
+          <p className={styles.total}>Total: <strong>{formatMoney(sale.total)}</strong></p>
 
           <Link to="/sales">
             <Button variant="secondary">Volver a ventas</Button>

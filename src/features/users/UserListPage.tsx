@@ -4,7 +4,6 @@ import { Alert, Badge, Button, ConfirmDialog, EmptyState, PageHeader, Spinner, T
 import { ApiError } from '../../shared/api/api'
 import { getSessionUser } from '../auth/session'
 import { usersApi, type ManagedUser } from './usersApi'
-import './users-page.css'
 
 const ROLE_LABELS: Record<string, string> = {
   OPERATOR: 'Operador',

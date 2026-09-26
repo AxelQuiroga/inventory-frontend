@@ -1,18 +1,18 @@
-.ProductForm-card {
+.card {
   max-width: 720px;
 }
 
-.ProductForm-fieldset {
+.fieldset {
   border: none;
   padding: 0;
   margin: 0 0 var(--space-5);
 }
 
-.ProductForm-fieldset:last-of-type {
+.fieldset:last-of-type {
   margin-bottom: 0;
 }
 
-.ProductForm-legend {
+.legend {
   font-weight: 600;
   font-size: 0.95rem;
   color: var(--color-text);
@@ -20,25 +20,25 @@
   margin-bottom: var(--space-3);
 }
 
-.ProductForm-grid {
+.grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--space-4);
 }
 
-.ProductForm-full {
+.full {
   grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
 }
 
-.ProductForm-textarea {
+.textarea {
   resize: vertical;
   min-height: 72px;
 }
 
-.ProductForm-actions {
+.actions {
   display: flex;
   align-items: center;
   gap: var(--space-3);

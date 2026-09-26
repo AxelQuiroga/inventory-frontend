@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { Alert, Badge, Button, Card, Input, PageHeader } from '../../shared/ui'
+import { Alert, Badge, Button, Card, Input, PageHeader, Select } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { usersApi, type ManagedUser } from './usersApi'
 import { generatePassword } from './password'
-import './users-page.css'
+import styles from './UserFormPage.module.css'
 
 type FieldErrors = Record<string, string | null>
 
@@ -80,36 +80,36 @@ export function UserFormPage() {
       <>
         <PageHeader title="Usuario creado" description="Guardá estas credenciales ahora" />
 
-        <Card className="UserForm-card">
+        <Card className={styles.card}>
           <Alert tone="success">
             El usuario <strong>{user.name}</strong> se creó correctamente.
           </Alert>
 
-          <dl className="UserForm-creds">
-            <div className="UserForm-credsItem">
+          <dl className={styles.creds}>
+            <div className={styles.credsItem}>
               <dt>Email</dt>
               <dd>{user.email}</dd>
             </div>
-            <div className="UserForm-credsItem">
+            <div className={styles.credsItem}>
               <dt>Rol</dt>
               <dd>{user.role === 'OPERATOR' ? 'Operador' : 'Lector'}</dd>
             </div>
-            <div className="UserForm-credsItem UserForm-credsItem--password">
+            <div className={`${styles.credsItem} ${styles.credsItemPassword}`}>
               <dt>
                 Contraseña
                 <Badge tone="warning">Una sola vez</Badge>
               </dt>
-              <dd className="UserForm-credsPassword">{password}</dd>
+              <dd className={styles.credsPassword}>{password}</dd>
             </div>
           </dl>
 
-          <p className="UserForm-notice">
+          <p className={styles.notice}>
             Esta contraseña <strong>no se puede volver a ver</strong> al cerrar esta pantalla: el
             sistema la guarda cifrada de forma irreversible. Si la perdés, desactivá la cuenta y
             creá otra.
           </p>
 
-          <div className="UserForm-actions">
+          <div className={styles.actions}>
             <Button onClick={() => navigate('/users')}>Listo, volver a usuarios</Button>
           </div>
         </Card>
@@ -124,11 +124,11 @@ export function UserFormPage() {
         description="Cuenta interna de OPERATOR o VIEWER (el ADMIN único no se crea desde acá)"
       />
 
-      <Card className="UserForm-card">
-        <form onSubmit={handleSubmit} className="UserForm-form" noValidate>
-          <fieldset className="UserForm-fieldset">
-            <legend className="UserForm-legend">Datos de la cuenta</legend>
-            <div className="UserForm-grid">
+      <Card className={styles.card}>
+        <form onSubmit={handleSubmit} noValidate>
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>Datos de la cuenta</legend>
+            <div className={styles.grid}>
               <Input
                 id="name"
                 label="Nombre"
@@ -149,21 +149,20 @@ export function UserFormPage() {
               />
 
               <div>
-                <label className="Input-label" htmlFor="role">Rol</label>
-                <select
+                <Select
                   id="role"
-                  className="Input-field"
+                  label="Rol"
                   value={form.role}
                   onChange={(e) => set('role', e.target.value)}
                 >
                   <option value="OPERATOR">Operador — registra stock y ventas</option>
                   <option value="VIEWER">Lector — solo ve información</option>
-                </select>
+                </Select>
                 <p className="Input-helper">Solo OPERATOR y VIEWER: el ADMIN no se crea por este flujo.</p>
               </div>
 
               <div>
-                <div className="UserForm-passwordRow">
+                <div className={styles.passwordRow}>
                   <Input
                     id="password"
                     label="Contraseña"
@@ -199,7 +198,7 @@ export function UserFormPage() {
 
           {error && <Alert tone="error">{error}</Alert>}
 
-          <div className="UserForm-actions">
+          <div className={styles.actions}>
             <Button type="submit" loading={submitting}>
               Crear usuario
             </Button>
