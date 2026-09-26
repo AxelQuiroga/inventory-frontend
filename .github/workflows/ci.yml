@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  frontend:
+    name: Frontend (lint + test + typecheck e2e + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias (lockfile congelado)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck de los specs e2e
+        run: npm run typecheck:e2e
+
+      - name: Tests unitarios/componentes (vitest + jsdom)
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  e2e:
+    name: Frontend E2E (Playwright + backend real + Postgres)
+    needs: frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: inventory_system
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d inventory_system"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/inventory_system
+    steps:
+      - uses: actions/checkout@v4
+
+      # El webServer del Playwright levanta el backend real con cwd ./../backend
+      # (scripts/e2e-server.ts): necesita el fuente del backend al lado.
+      # Si el repo del backend tiene OTRO nombre, definí la repo variable
+      # BACKEND_REPO (Settings > Variables > Actions) para no hardcodearlo.
+      - name: Checkout del backend (requerido por el e2e)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/${{ vars.BACKEND_REPO || 'backend' }}
+          path: ../backend
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias frontend (lockfile congelado)
+        run: npm ci
+
+      - name: Instalar dependencias backend (tsx, pg y drizzle son del backend)
+        working-directory: ../backend
+        run: npm ci
+
+      - name: Crear base de tests (inventory_system_test)
+        working-directory: ../backend
+        run: |
+          node --input-type=module -e "
+          import { Client } from 'pg';
+          const client = new Client({ connectionString: process.env.DATABASE_URL });
+          await client.connect();
+          try {
+            await client.query('CREATE DATABASE inventory_system_test');
+            console.log('inventory_system_test creada');
+          } catch (err) {
+            if (err.code !== '42P04') throw err;
+            console.log('inventory_system_test ya existía');
+          }
+          await client.end();
+          "
+
+      - name: Aplicar schema a la base de tests
+        working-directory: ../backend
+        run: npm run db:push:test
+
+      - name: Instalar navegador Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Tests e2e (browser -> vite -> backend real -> Postgres)
+        run: npm run test:e2e
+
+      - name: Subir reporte Playwright (solo si falla)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 3

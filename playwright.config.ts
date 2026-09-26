@@ -12,11 +12,17 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   timeout: 30_000,
-  retries: 0,
-  reporter: [['list']],
+  // En CI un retry convierte flakes transitorios (arranque de servers,
+  // cold start de Postgres) en evidencia útil: con trace retenida se puede
+  // ver el frame exacto del fallo.
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI
+    ? [['list'], ['html', { open: 'never' }]]
+    : [['list']],
   use: {
     baseURL: 'http://127.0.0.1:4310',
     headless: true,
+    trace: 'retain-on-failure',
   },
   webServer: [
     {
