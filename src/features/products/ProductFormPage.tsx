@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { Alert, Button, Card, Input, PageHeader } from '../../shared/ui'
+import { Alert, Button, Card, Input, PageHeader, Textarea } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { productsApi, type Product } from './productsApi'
 import styles from './ProductFormPage.module.css'
@@ -237,10 +237,9 @@ export function ProductFormPage() {
               />
 
               <div className={styles.full}>
-                <label className="Input-label" htmlFor="description">Descripción</label>
-                <textarea
+                <Textarea
                   id="description"
-                  className={`Input-field ${styles.textarea}`}
+                  label="Descripción"
                   value={form.description}
                   onChange={(e) => set('description', e.target.value)}
                 />

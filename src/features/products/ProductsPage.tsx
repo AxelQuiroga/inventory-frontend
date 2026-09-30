@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
-import { Alert, Badge, Button, ConfirmDialog, EmptyState, Input, Menu, PageHeader, Spinner, Table } from '../../shared/ui'
+import { Alert, Badge, Button, Checkbox, ConfirmDialog, EmptyState, Input, Menu, PageHeader, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { getSessionUser } from '../auth/session'
 import { productsApi, type Product, type ListProductsParams } from './productsApi'
@@ -142,25 +142,23 @@ export function ProductsPage() {
           Buscar
         </Button>
 
-        <label className={styles.check}>
-          <input
-            type="checkbox"
-            checked={searchParams.get('lowStock') === 'true'}
-            onChange={(e) => applyFilter({ lowStock: e.target.checked ? 'true' : '' })}
-          />{' '}
-          Solo stock bajo
-        </label>
+        <Checkbox
+          id="lowStock"
+          label="Solo stock bajo"
+          className={styles.check}
+          checked={searchParams.get('lowStock') === 'true'}
+          onChange={(e) => applyFilter({ lowStock: e.target.checked ? 'true' : '' })}
+        />
 
         {/* includeInactive es ADMIN-only en el backend */}
         {isAdmin && (
-          <label className={styles.check}>
-            <input
-              type="checkbox"
-              checked={searchParams.get('includeInactive') === 'true'}
-              onChange={(e) => applyFilter({ includeInactive: e.target.checked ? 'true' : '' })}
-            />{' '}
-            Ver inactivos
-          </label>
+          <Checkbox
+            id="includeInactive"
+            label="Ver inactivos"
+            className={styles.check}
+            checked={searchParams.get('includeInactive') === 'true'}
+            onChange={(e) => applyFilter({ includeInactive: e.target.checked ? 'true' : '' })}
+          />
         )}
       </div>
 

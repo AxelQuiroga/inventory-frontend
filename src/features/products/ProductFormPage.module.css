@@ -33,11 +33,6 @@
   gap: var(--space-1);
 }
 
-.textarea {
-  resize: vertical;
-  min-height: 72px;
-}
-
 .actions {
   display: flex;
   align-items: center;

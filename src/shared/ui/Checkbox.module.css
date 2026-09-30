@@ -1,0 +1,62 @@
+/* Checkbox del design system: appearance:none elimina el estilo del SO; el
+   "check" es un ::before con clip-path que escala al marcar. Solo tokens. */
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+/* El check está siempre en el DOM (grid centrado) y escala de 0 a 1: evita
+   layout shift y permite animar la entrada. */
+.input::before {
+  content: '';
+  width: 10px;
+  height: 7px;
+  transform: scale(0);
+  transform-origin: bottom left;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  background: #fff;
+  transition: transform var(--transition-fast);
+}
+
+.input:checked {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+}
+
+.input:checked::before {
+  transform: scale(1);
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.input:disabled {
+  background-color: var(--color-neutral-soft);
+  cursor: not-allowed;
+}
+
+.label {
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  cursor: pointer;
+}

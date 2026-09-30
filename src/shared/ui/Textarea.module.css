@@ -1,0 +1,9 @@
+/* Textarea del design system: hereda la base visual de .Input-field (ui.css)
+   sin duplicarla (composes from global); agrega lo propio de un área de
+   texto multilínea: altura de arranque y resize vertical únicamente. */
+.field {
+  composes: Input-field from global;
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.5;
+}
