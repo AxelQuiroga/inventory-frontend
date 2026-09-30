@@ -68,13 +68,14 @@ jobs:
       # (backend/scripts/e2e-server.ts): necesita el fuente del backend al lado.
       # actions/checkout@v4 NO permite un path que escape del workspace (error
       # "Repository path ... is not under ..."), por eso se clona con git
-      # directo; el default es el repo real (inventory-backend) y BACKEND_REPO
-      # permite override por Settings. Si el repo se vuelve privado, la URL
-      # debe llevar el GITHUB_TOKEN (x-access-token:${{ secrets.GITHUB_TOKEN }}@).
+      # directo; inventory-backend es PRIVADO, así que la URL lleva el
+      # GITHUB_TOKEN (x-access-token), que con contents:read alcanza para
+      # clonar otros repos del mismo owner. BACKEND_REPO permite override por
+      # Settings si el nombre cambia.
       - name: Checkout del backend (requerido por el e2e)
         run: |
           git clone --depth 1 \
-            "https://github.com/${{ github.repository_owner }}/${{ vars.BACKEND_REPO || 'inventory-backend' }}.git" \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ vars.BACKEND_REPO || 'inventory-backend' }}.git" \
             ../backend
 
       - uses: actions/setup-node@v4
