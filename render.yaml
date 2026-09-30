@@ -1,0 +1,21 @@
+# Render Blueprint — deploy del frontend del ERP.
+#
+# Uso:
+#   1) Conectar el repo `inventory-frontend` en Render y elegir este archivo.
+#   2) El build arg VITE_API_URL apunta al backend ya desplegado; si cambia la
+#      URL del servicio backend, ajustar esta linea (el container se builda con
+#      ese valor estático, como cualquier SPA servida por nginx).
+#   3) IMPORTANTE: el backend recibe el origen de este frontend — agregar la
+#      URL pública del frontend a CORS_ORIGINS en el dashboard del backend.
+services:
+  - type: web
+    name: inventory-frontend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      # build: true lo expone como ARG del Dockerfile (VITE_API_URL); sin él
+      # la variable no existiría en el build del container.
+      - key: VITE_API_URL
+        value: https://inventory-backend.onrender.com
+        build: true
