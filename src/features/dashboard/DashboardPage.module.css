@@ -1,24 +1,27 @@
-.Dashboard-kpis {
+.kpis {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-6);
 }
 
-.Dashboard-kpiLink {
-  text-decoration: none;
-}
-.Dashboard-kpiLink:hover {
+/* El link no subraya: el `a:hover` global (index.css) tiene más
+   especificidad que este class-only, por eso el hover propio repite none. */
+.kpiLink {
   text-decoration: none;
 }
 
-.Dashboard-kpiValue {
+.kpiLink:hover {
+  text-decoration: none;
+}
+
+.kpiValue {
   font-size: var(--font-size-2xl);
   font-weight: 600;
   color: var(--color-text);
 }
 
-.Dashboard-kpiLabel {
+.kpiLabel {
   color: var(--color-text-muted);
   font-size: var(--font-size-md);
   margin-top: var(--space-1);

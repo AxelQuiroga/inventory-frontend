@@ -4,7 +4,7 @@ import { Alert, Button, Card, Input } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { authApi } from './authApi'
 import { saveToken } from './tokenStore'
-import './login-page.css'
+import styles from './LoginPage.module.css'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -29,11 +29,11 @@ export function LoginPage() {
   }
 
   return (
-    <div className="LoginPage">
+    <div className={styles.page}>
       <Card>
-        <h1 className="LoginPage-title">Iniciar sesión</h1>
+        <h1 className={styles.title}>Iniciar sesión</h1>
 
-        <form onSubmit={handleSubmit} className="LoginPage-form">
+        <form onSubmit={handleSubmit} className={styles.form}>
           <Input
             id="email"
             label="Email"

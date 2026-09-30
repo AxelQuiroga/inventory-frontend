@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getSessionUser } from '../../features/auth/session'
 import { clearToken } from '../../features/auth/tokenStore'
 import { Button } from '../ui'
-import './layout.css'
+import styles from './Layout.module.css'
 
 // Secciones pendientes del MVP: se muestran deshabilitadas (no links falsos).
 const disabledItems = ['Inventario']
@@ -17,35 +17,35 @@ export function Layout() {
   }
 
   return (
-    <div className="Layout">
-      <aside className="Layout-sidebar">
-        <div className="Layout-brand">📦 Inventory ERP</div>
-        <nav className="Layout-nav" aria-label="Navegación principal">
-          <NavLink to="/" end className={({ isActive }) => `Layout-navLink${isActive ? ' Layout-navLink--active' : ''}`}>
+    <div className={styles.layout}>
+      <aside className={styles.sidebar}>
+        <div className={styles.brand}>📦 Inventory ERP</div>
+        <nav className={styles.nav} aria-label="Navegación principal">
+          <NavLink to="/" end className={({ isActive }) => `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ''}`}>
             Dashboard
           </NavLink>
-          <NavLink to="/products" className={({ isActive }) => `Layout-navLink${isActive ? ' Layout-navLink--active' : ''}`}>
+          <NavLink to="/products" className={({ isActive }) => `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ''}`}>
             Productos
           </NavLink>
-          <NavLink to="/sales" className={({ isActive }) => `Layout-navLink${isActive ? ' Layout-navLink--active' : ''}`}>
+          <NavLink to="/sales" className={({ isActive }) => `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ''}`}>
             Ventas
           </NavLink>
           {/* Movimientos globales: lectura para cualquier rol autenticado.
               La política de autoría se resuelve server-side; el link no está
               condicionado por rol porque la página es accesible para todos. */}
-          <NavLink to="/movements" className={({ isActive }) => `Layout-navLink${isActive ? ' Layout-navLink--active' : ''}`}>
+          <NavLink to="/movements" className={({ isActive }) => `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ''}`}>
             Movimientos
           </NavLink>
           {/* Gestión de usuarios: link visible solo para el ADMIN (la ruta
               también está protegida; esto es para no mostrar una acción que
               el rol no puede usar) */}
           {user?.role === 'ADMIN' && (
-            <NavLink to="/users" className={({ isActive }) => `Layout-navLink${isActive ? ' Layout-navLink--active' : ''}`}>
+            <NavLink to="/users" className={({ isActive }) => `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ''}`}>
               Usuarios
             </NavLink>
           )}
           {disabledItems.map((label) => (
-            <span key={label} className="Layout-navDisabled" title="Próximamente">
+            <span key={label} className={styles.navDisabled} title="Próximamente">
               {label}
             </span>
           ))}
@@ -53,9 +53,9 @@ export function Layout() {
       </aside>
 
       <div>
-        <header className="Layout-topbar">
+        <header className={styles.topbar}>
           {user && (
-            <span className="Layout-user" title={user.role}>
+            <span className={styles.user} title={user.role}>
               👤 {user.email}
             </span>
           )}
@@ -64,7 +64,7 @@ export function Layout() {
           </Button>
         </header>
 
-        <main className="Layout-main">
+        <main className={styles.main}>
           <Outlet />
         </main>
       </div>

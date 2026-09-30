@@ -1,48 +1,57 @@
 /* Layout del ERP — estructura común de todas las páginas. */
-.Layout {
+.layout {
   display: grid;
   grid-template-columns: 230px 1fr;
   min-height: 100vh;
 }
 
-.Layout-sidebar {
+.sidebar {
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
   padding: var(--space-5) var(--space-4);
 }
 
-.Layout-brand {
+.brand {
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: var(--space-6);
 }
 
-.Layout-nav {
+.nav {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
 }
 
-.Layout-navLink {
+.navLink {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   color: var(--color-text-muted);
   font-size: var(--font-size-md);
   transition: background var(--transition-fast), color var(--transition-fast);
 }
-.Layout-navLink:hover {
+
+.navLink:hover {
   background: var(--color-neutral-soft);
   color: var(--color-text);
   text-decoration: none;
 }
-.Layout-navLink--active {
+
+/* Modificador activo: composes reutiliza la base del link. El hover del
+   activo mantiene el highlight para no "apagarlo" al pasar el mouse. */
+.navLinkActive {
+  composes: navLink;
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font-weight: 500;
 }
 
-.Layout-navDisabled {
+.navLinkActive:hover {
+  background: var(--color-primary-soft);
+}
+
+.navDisabled {
   padding: var(--space-2) var(--space-3);
   color: var(--color-text-muted);
   opacity: 0.45;
@@ -50,7 +59,7 @@
   font-size: var(--font-size-md);
 }
 
-.Layout-topbar {
+.topbar {
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -60,41 +69,45 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.Layout-user {
+.user {
   color: var(--color-text-muted);
   font-size: var(--font-size-md);
 }
 
-.Layout-main {
+.main {
   padding: var(--space-5);
   max-width: 1200px;
 }
 
 /* Tablet: sidebar angosta */
 @media (max-width: 1024px) {
-  .Layout {
+  .layout {
     grid-template-columns: 190px 1fr;
   }
 }
 
 /* Mobile: sidebar pasa a navegación horizontal arriba */
 @media (max-width: 768px) {
-  .Layout {
+  .layout {
     grid-template-columns: 1fr;
   }
-  .Layout-sidebar {
+
+  .sidebar {
     border-right: none;
     border-bottom: 1px solid var(--color-border);
     padding: var(--space-3) var(--space-4);
   }
-  .Layout-brand {
+
+  .brand {
     margin-bottom: var(--space-3);
   }
-  .Layout-nav {
+
+  .nav {
     flex-direction: row;
     flex-wrap: wrap;
   }
-  .Layout-main {
+
+  .main {
     padding: var(--space-4);
   }
 }

@@ -4,7 +4,7 @@ import { Alert, Badge, Button, Card, Input, PageHeader, Spinner } from '../../sh
 import { ApiError } from '../../shared/api/api'
 import { productsApi } from '../products/productsApi'
 import { movementsApi } from './movementsApi'
-import './movement-form-page.css'
+import styles from './MovementFormPage.module.css'
 
 // fieldErrors por campo (contrato 400 del backend sobre registerMovementSchema:
 // quantity/reason). Null = sin error. Los errores de negocio (Insufficient
@@ -103,18 +103,18 @@ export function MovementFormPage() {
     <>
       <PageHeader title="Registrar movimiento" description="Entrada o salida de stock del producto" />
 
-      <Card className="MovementForm-card">
-        <section className="MovementForm-product">
+      <Card className={styles.card}>
+        <section className={styles.product}>
           <strong>{product.name}</strong>
-          <span className="MovementForm-sku">{product.sku}</span>
-          <span className="MovementForm-stock">
+          <span className={styles.sku}>{product.sku}</span>
+          <span className={styles.stock}>
             <span>Stock actual: {product.stock}</span>
             {product.stock <= product.minStock && <Badge tone="warning">Stock bajo</Badge>}
             {!product.active && <Badge tone="neutral">Inactivo</Badge>}
           </span>
         </section>
 
-        <form onSubmit={(e) => e.preventDefault()} className="MovementForm-form">
+        <form onSubmit={(e) => e.preventDefault()} className={styles.form}>
           <Input
             id="quantity"
             label="Cantidad"
@@ -140,7 +140,7 @@ export function MovementFormPage() {
 
           {/* Ambos contratos son siempre visibles: el server decide si la
               operación es válida (stock suficiente, producto activo). */}
-          <div className="MovementForm-actions">
+          <div className={styles.actions}>
             <Button
               variant="secondary"
               loading={submitting}

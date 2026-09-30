@@ -4,7 +4,7 @@ import { Alert, Badge, Card, PageHeader, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { productsApi, type Product } from '../products/productsApi'
 import { movementsApi } from '../movements/movementsApi'
-import './dashboard-page.css'
+import styles from './DashboardPage.module.css'
 
 interface Totals {
   total: number
@@ -54,27 +54,27 @@ export function DashboardPage() {
     <>
       <PageHeader title="Dashboard" description="Resumen general del inventario" />
 
-      <section className="Dashboard-kpis">
-        <Link to="/products" className="Dashboard-kpiLink">
+      <section className={styles.kpis}>
+        <Link to="/products" className={styles.kpiLink}>
           <Card>
-            <div className="Dashboard-kpiValue">{totals.total}</div>
-            <div className="Dashboard-kpiLabel">Total de productos</div>
+            <div className={styles.kpiValue}>{totals.total}</div>
+            <div className={styles.kpiLabel}>Total de productos</div>
           </Card>
         </Link>
-        <Link to="/products?lowStock=true" className="Dashboard-kpiLink">
+        <Link to="/products?lowStock=true" className={styles.kpiLink}>
           <Card>
-            <div className="Dashboard-kpiValue">{totals.lowStock}</div>
-            <div className="Dashboard-kpiLabel">Stock bajo</div>
+            <div className={styles.kpiValue}>{totals.lowStock}</div>
+            <div className={styles.kpiLabel}>Stock bajo</div>
           </Card>
         </Link>
         <Card>
-          <div className="Dashboard-kpiValue">{totals.stock}</div>
-          <div className="Dashboard-kpiLabel">Stock total</div>
+          <div className={styles.kpiValue}>{totals.stock}</div>
+          <div className={styles.kpiLabel}>Stock total</div>
         </Card>
-        <Link to="/movements" className="Dashboard-kpiLink">
+        <Link to="/movements" className={styles.kpiLink}>
           <Card>
-            <div className="Dashboard-kpiValue">{totals.movements}</div>
-            <div className="Dashboard-kpiLabel">Movimientos</div>
+            <div className={styles.kpiValue}>{totals.movements}</div>
+            <div className={styles.kpiLabel}>Movimientos</div>
           </Card>
         </Link>
       </section>

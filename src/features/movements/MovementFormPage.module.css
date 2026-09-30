@@ -1,8 +1,8 @@
-.MovementForm-card {
+.card {
   max-width: 560px;
 }
 
-.MovementForm-product {
+.product {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -11,25 +11,25 @@
   margin-bottom: var(--space-4);
 }
 
-.MovementForm-sku {
+.sku {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }
 
-.MovementForm-stock {
+.stock {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-md);
 }
 
-.MovementForm-form {
+.form {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
-.MovementForm-actions {
+.actions {
   display: flex;
   align-items: center;
   gap: var(--space-3);
