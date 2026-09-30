@@ -64,7 +64,7 @@ Requiere el backend corriendo (`npm run dev` en inventory-backend).
 ## 🧪 Testing
 
 ```bash
-npm test               # Unit: Vitest + Testing Library (201 tests)
+npm test               # Unit: Vitest + Testing Library (203 tests)
 npm run test:e2e       # E2E: Playwright contra backend real + TEST DB
                        # (levanta vite en 4310 y el backend e2e en 3210; TEST DB arriba)
 npm run typecheck:e2e  # Typecheck del dir e2e/

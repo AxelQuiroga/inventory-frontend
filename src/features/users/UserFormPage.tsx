@@ -148,18 +148,16 @@ export function UserFormPage() {
                 required
               />
 
-              <div>
-                <Select
-                  id="role"
-                  label="Rol"
-                  value={form.role}
-                  onChange={(e) => set('role', e.target.value)}
-                >
-                  <option value="OPERATOR">Operador — registra stock y ventas</option>
-                  <option value="VIEWER">Lector — solo ve información</option>
-                </Select>
-                <p className="Input-helper">Solo OPERATOR y VIEWER: el ADMIN no se crea por este flujo.</p>
-              </div>
+              <Select
+                id="role"
+                label="Rol"
+                value={form.role}
+                onChange={(e) => set('role', e.target.value)}
+                helper="Solo OPERATOR y VIEWER: el ADMIN no se crea por este flujo."
+              >
+                <option value="OPERATOR">Operador — registra stock y ventas</option>
+                <option value="VIEWER">Lector — solo ve información</option>
+              </Select>
 
               <div>
                 <div className={styles.passwordRow}>

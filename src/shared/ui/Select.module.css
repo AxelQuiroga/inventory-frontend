@@ -43,3 +43,25 @@
   background-color: var(--color-neutral-soft);
   cursor: not-allowed;
 }
+
+/* ---- Validación (mismo lenguaje visual que .Input--error de ui.css) ---- */
+
+/* Modificador de error aplicado al wrapper: borde danger + halo rojo en focus. */
+.wrapperError .select {
+  border-color: var(--color-danger);
+}
+
+.wrapperError .select:focus-visible {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.2);
+}
+
+.error {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+}
+
+.helper {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

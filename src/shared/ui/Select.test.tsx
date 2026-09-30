@@ -44,4 +44,35 @@ describe('Select', () => {
 
     expect(screen.getByLabelText('Tipo')).toBeDisabled()
   })
+
+  it('helper se asocia al campo por aria-describedby', () => {
+    render(
+      <Select id="type" label="Tipo" helper="Solo dos opciones" value="" onChange={() => {}}>
+        <option value="">Todos</option>
+      </Select>,
+    )
+
+    expect(screen.getByText('Solo dos opciones')).toBeInTheDocument()
+    expect(screen.getByLabelText('Tipo')).toHaveAccessibleDescription('Solo dos opciones')
+  })
+
+  it('error pinta estado inválido y gana sobre helper', () => {
+    render(
+      <Select
+        id="type"
+        label="Tipo"
+        error="Elegí un tipo"
+        helper="No se muestra con error"
+        value=""
+        onChange={() => {}}
+      >
+        <option value="">Todos</option>
+      </Select>,
+    )
+
+    const select = screen.getByLabelText('Tipo')
+    expect(select).toBeInvalid()
+    expect(select).toHaveAccessibleDescription('Elegí un tipo')
+    expect(screen.queryByText('No se muestra con error')).not.toBeInTheDocument()
+  })
 })
