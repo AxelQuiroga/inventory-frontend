@@ -65,14 +65,17 @@ jobs:
       - uses: actions/checkout@v4
 
       # El webServer del Playwright levanta el backend real con cwd ./../backend
-      # (scripts/e2e-server.ts): necesita el fuente del backend al lado.
-      # Si el repo del backend tiene OTRO nombre, definí la repo variable
-      # BACKEND_REPO (Settings > Variables > Actions) para no hardcodearlo.
+      # (backend/scripts/e2e-server.ts): necesita el fuente del backend al lado.
+      # actions/checkout@v4 NO permite un path que escape del workspace (error
+      # "Repository path ... is not under ..."), por eso se clona con git
+      # directo; el default es el repo real (inventory-backend) y BACKEND_REPO
+      # permite override por Settings. Si el repo se vuelve privado, la URL
+      # debe llevar el GITHUB_TOKEN (x-access-token:${{ secrets.GITHUB_TOKEN }}@).
       - name: Checkout del backend (requerido por el e2e)
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/${{ vars.BACKEND_REPO || 'backend' }}
-          path: ../backend
+        run: |
+          git clone --depth 1 \
+            "https://github.com/${{ github.repository_owner }}/${{ vars.BACKEND_REPO || 'inventory-backend' }}.git" \
+            ../backend
 
       - uses: actions/setup-node@v4
         with:
