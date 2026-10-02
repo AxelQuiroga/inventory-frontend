@@ -2,6 +2,17 @@
 @import './shared/ui/ui.css';
 
 /* Base global mínima del ERP */
+
+/* Reset universal: el navegador usa content-box (width 100% + padding = 
+   overflow). Con border-box todo elemento mide desde su borde — el estándar
+   (normalize/reboot). Sin esto, cards e inputs con width:100% desbordan en
+   pantallas chicas (lo expuso el check responsive del login). */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
