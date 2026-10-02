@@ -1,23 +1,45 @@
-/* Layout del ERP — estructura común de todas las páginas. */
+/* Layout del ERP — estructura común de todas las páginas.
+   Identidad: el sidebar es la continuación del hero del login (azul noche +
+   retícula técnica + glow de marca, pero MUCHO más tenues: el contenido denso
+   manda acá). El main sigue claro para legibilidad de datos. */
 .layout {
   display: grid;
-  grid-template-columns: 230px 1fr;
+  /* minmax(0, 1fr): el track de contenido NO crece con contenido ancho
+     (tablas con SKUs largos expandían el track vía min-content y empujaban
+     TODO el layout — sidebar, topbar y main desbordaban juntos en mobile).
+     Con mínimo 0, el overflow lo absorbe el wrapper de la tabla
+     (overflow-x: auto) en vez de la página. */
+  grid-template-columns: 230px minmax(0, 1fr);
   min-height: 100vh;
 }
 
+/* Los ítems del grid no expanden su track por contenido ancho */
+.layout > * {
+  min-width: 0;
+}
+
+/* Sidebar: misma superficie del login (--color-hero-bg) con retícula al 2%
+   (no compite con el contenido) y un glow de marca desde arriba. */
 .sidebar {
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  background-color: var(--color-hero-bg);
+  background-image:
+    radial-gradient(circle at 20% 0%, rgba(30, 94, 255, 0.14), transparent 45%),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 48px 48px, 48px 48px;
+  background-repeat: no-repeat, repeat, repeat;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   padding: var(--space-5) var(--space-4);
 }
 
+/* Brand: espejo del login — logo + Inventory ERP en blanco */
 .brand {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-lg);
   font-weight: 600;
-  color: var(--color-text);
+  color: #ffffff;
   margin-bottom: var(--space-6);
 }
 
@@ -33,33 +55,44 @@
   gap: var(--space-1);
 }
 
+/* Nav: patrón chip del login (borde translúcido reservado para que el activo
+   no mueva el layout). El glow azul es solo del item activo. */
 .navLink {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
-  color: var(--color-text-muted);
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.6);
   font-size: var(--font-size-md);
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .navLink:hover {
-  background: var(--color-neutral-soft);
-  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
   text-decoration: none;
 }
 
-/* Modificador activo: composes reutiliza la base del link. El hover del
-   activo mantiene el highlight para no "apagarlo" al pasar el mouse. */
+/* Modificador activo: chip con glow azul de marca + barrita lateral (inset
+   box-shadow, no afecta medidas) para saber al instante dónde estás. */
 .navLinkActive {
   composes: navLink;
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
+  background: rgba(30, 94, 255, 0.32);
+  border-color: rgba(30, 94, 255, 0.55);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+  color: #ffffff;
   font-weight: 500;
 }
 
 .navLinkActive:hover {
-  background: var(--color-primary-soft);
+  background: rgba(30, 94, 255, 0.38);
+  border-color: rgba(30, 94, 255, 0.65);
 }
 
+/* Topbar: se mantiene claro — aire entre el shell oscuro y los datos */
 .topbar {
   display: flex;
   justify-content: flex-end;
@@ -75,27 +108,33 @@
   font-size: var(--font-size-md);
 }
 
+/* Main: claro (legibilidad de tablas/forms). Un glow de marca MUY tenue desde
+   arriba como puente visual con el login — sin retícula (ensuciaría el
+   contenido denso). */
 .main {
   padding: var(--space-5);
   max-width: 1200px;
+  background-image: radial-gradient(circle at 85% 0%, rgba(30, 94, 255, 0.05), transparent 40%);
+  background-repeat: no-repeat;
 }
 
 /* Tablet: sidebar angosta */
 @media (max-width: 1024px) {
   .layout {
-    grid-template-columns: 190px 1fr;
+    grid-template-columns: 190px minmax(0, 1fr);
   }
 }
 
-/* Mobile: sidebar pasa a navegación horizontal arriba */
+/* Mobile: sidebar pasa a navegación horizontal arriba — el dark y el patrón
+   de chips se mantienen (la barra se vuelve una franja de marca). */
 @media (max-width: 768px) {
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sidebar {
     border-right: none;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding: var(--space-3) var(--space-4);
   }
 
