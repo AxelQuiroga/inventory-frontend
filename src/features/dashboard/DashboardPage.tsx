@@ -79,7 +79,17 @@ export function DashboardPage() {
         </Link>
       </section>
 
-      <PageHeader title="Productos recientes" action={<Link to="/products">ver todos</Link>} />
+      <PageHeader
+        title="Productos recientes"
+        action={
+          <Link to="/products" className={styles.viewAll}>
+            Ver todos
+            <span className={styles.viewAllArrow} aria-hidden="true">
+              →
+            </span>
+          </Link>
+        }
+      />
 
       {recent.length === 0 ? (
         <p>No hay productos registrados.</p>

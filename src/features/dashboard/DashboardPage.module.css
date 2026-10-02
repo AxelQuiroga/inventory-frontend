@@ -26,3 +26,33 @@
   font-size: var(--font-size-md);
   margin-top: var(--space-1);
 }
+
+/* "Ver todos" del header de Productos recientes: link discreto con flecha
+   (patrón estándar de view-all de sección). El `a:hover` global (index.css) le
+   gana en especificidad a un class-only, así que el hover repite
+   text-decoration:none (mismo gotcha documentado en .kpiLink). */
+.viewAll {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.viewAll:hover {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+/* La flecha se desliza en hover; aria-hidden porque es decorativa */
+.viewAllArrow {
+  display: inline-block;
+  transition: transform 150ms ease;
+}
+
+.viewAll:hover .viewAllArrow {
+  transform: translateX(3px);
+}
