@@ -17,8 +17,18 @@ RUN npm run build
 # ---- Stage 2: nginx (SPA + proxy /api -> backend) ----
 FROM nginx:1.27-alpine
 
+# API_UPSTREAM es RUNTIME, no build: URL completa del backend (con esquema) que
+# el template de abajo materializa al arrancar con el entrypoint oficial de
+# nginx (envsubst sobre /etc/nginx/templates/*.template -> conf.d). El ENV
+# cubre el default de docker compose; Render sobreescribe la env var en runtime.
+ENV API_UPSTREAM=http://backend:3000
+
+# El default.conf de la imagen base colisiona con nuestro server (listen 80
+# default_server): eliminarlo — el template lo regenera con nuestras reglas.
+RUN rm /etc/nginx/conf.d/default.conf
+
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 EXPOSE 80
 

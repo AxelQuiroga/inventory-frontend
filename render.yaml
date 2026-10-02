@@ -1,21 +1,36 @@
 # Render Blueprint — deploy del frontend del ERP.
 #
-# Uso:
-#   1) Conectar el repo `inventory-frontend` en Render y elegir este archivo.
-#   2) El build arg VITE_API_URL apunta al backend ya desplegado; si cambia la
-#      URL del servicio backend, ajustar esta linea (el container se builda con
-#      ese valor estático, como cualquier SPA servida por nginx).
-#   3) IMPORTANTE: el backend recibe el origen de este frontend — agregar la
-#      URL pública del frontend a CORS_ORIGINS en el dashboard del backend.
+# Modelo de deploy: MISMO ORIGEN que docker compose (VITE_API_URL=/api). La
+# SPA pega a su propio host /api y nginx (template ${API_UPSTREAM}, envsubst
+# al arrancar) reenvía al backend indicado en API_UPSTREAM. Cero CORS.
+#
+# Orden recomendado: desplegar PRIMERO el backend (inventory-backend) y
+# ajustar API_UPSTREAM a la URL pública resultante antes de este deploy.
+#
+# AVISO sobre API_UPSTREAM: el valor de abajo es un placeholder. Render puede
+# agregarle un sufijo si el nombre "inventory-backend" ya está tomado por otro
+# servicio (ej: inventory-backend-abc123) — SIEMPRE revisá la URL real del
+# backend desplegado y actualizá este valor.
+#
+# AVISO sobre healthCheckPath: apunta a /api/health, NO a "/". "/" sólo cae en
+# la rama SPA (try_files → index.html): devuelve 200 aunque API_UPSTREAM esté
+# vacío o mal escrito, dejando un deploy "verde" que después 502a en el 100% de
+# las llamadas /api. /api/health atraviesa el proxy nginx → backend /health, así
+# que el probe falla ruidosamente (502/503) si el upstream está roto: es el
+# acoplamiento correcto, porque el servicio no sirve nada sin backend.
 services:
   - type: web
     name: inventory-frontend
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free
+    healthCheckPath: /api/health
     envVars:
-      # build: true lo expone como ARG del Dockerfile (VITE_API_URL); sin él
-      # la variable no existiría en el build del container.
+      # Build arg del Dockerfile: la SPA se construye pegando a su mismo
+      # origen con el prefijo /api (igual que el compose).
       - key: VITE_API_URL
-        value: https://inventory-backend.onrender.com
+        value: /api
         build: true
+      # Runtime (no build): reemplaza ${API_UPSTREAM} del template nginx.
+      - key: API_UPSTREAM
+        value: https://inventory-backend.onrender.com

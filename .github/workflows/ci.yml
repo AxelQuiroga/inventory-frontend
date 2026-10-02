@@ -40,6 +40,98 @@ jobs:
       - name: Build
         run: npm run build
 
+  nginx-template:
+    name: Nginx template (envsubst + proxy /api fail-loud)
+    needs: frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # El template nginx.conf solo se materializa con envsubst DENTRO del
+      # contenedor: ningún test de Vitest lo cubre (el job `frontend` no tiene
+      # paso de docker). Este job es la única red de seguridad: un typo en
+      # ${API_UPSTREAM}, un COPY roto o un upstream mal escrito tienen que
+      # romper CI, no producción.
+      - name: Build de la imagen del frontend
+        run: docker build -t inventory-frontend-check .
+
+      # Upstream A: el del compose (host interno). No existe en el runner → el
+      # proxy debe fallar con 502 POR REQUEST (los hostnames de proxy_pass se
+      # resuelven perezosamente: nginx arranca igual, no aborta).
+      - name: Boot con upstream interno (compose-like)
+        run: |
+          docker run --rm -d --name nginx-check-internal \
+            -e API_UPSTREAM=http://backend:3000 -p 8080:80 \
+            inventory-frontend-check
+          sleep 5
+
+      # Upstream B: el de Render (host externo). Puede resolver o no según el
+      # DNS del runner; por eso abajo solo se exige "no 200".
+      - name: Boot con upstream externo (Render-like)
+        run: |
+          docker run --rm -d --name nginx-check-external \
+            -e API_UPSTREAM=https://inventory-backend.onrender.com -p 8081:80 \
+            inventory-frontend-check
+          sleep 5
+
+      - name: nginx -t sobre el config YA materializado por envsubst
+        run: |
+          for c in nginx-check-internal nginx-check-external; do
+            echo "== $c =="
+            docker exec "$c" nginx -t
+          done
+
+      - name: "envsubst: sin ${...} residuales y con el upstream inyectado"
+        run: |
+          for c in nginx-check-internal nginx-check-external; do
+            echo "== $c =="
+            docker exec "$c" grep -n 'proxy_pass' /etc/nginx/conf.d/default.conf
+            if docker exec "$c" grep -q '\${' /etc/nginx/conf.d/default.conf; then
+              echo "::error::$c tiene \${...} sin sustituir: envsubst no corrió sobre el template"
+              docker exec "$c" grep -n '\${' /etc/nginx/conf.d/default.conf
+              exit 1
+            fi
+            echo "OK: sin \${...} residuales"
+          done
+          # Y que el valor inyectado sea el que quedó (no un default mudo)
+          docker exec nginx-check-internal grep -q 'proxy_pass http://backend:3000/;' \
+            /etc/nginx/conf.d/default.conf
+          docker exec nginx-check-external grep -q 'proxy_pass https://inventory-backend.onrender.com/;' \
+            /etc/nginx/conf.d/default.conf
+          echo "OK: API_UPSTREAM llegó al config renderizado en ambos"
+
+      - name: /api/health falla ruidosamente (502) en vez de fingir salud (200)
+        run: |
+          code_interno="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/health)"
+          echo "interno (http://backend:3000, no existe en el runner) -> $code_interno"
+          if [ "$code_interno" != "502" ]; then
+            echo "::error::se esperaba 502 con un upstream inalcanzable y llegó $code_interno"
+            exit 1
+          fi
+
+          code_externo="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8081/api/health)"
+          echo "externo (https://inventory-backend.onrender.com) -> $code_externo"
+          # No se exige el código exacto: según cómo resuelva DNS ese host en el
+          # runner puede ser 502 (no resuelve) u otro 4xx/5xx del lado del host.
+          # Lo que NO puede ser 200 es el requisito: un 200 con el upstream roto
+          # significaría que el probe recorre el proxy y reporta "ok" mintiendo
+          # (el zombie que healthCheckPath: /api/health evita en Render).
+          if [ "$code_externo" = "200" ]; then
+            echo "::error::200 con upstream roto: /api/health no está recorriendo el proxy"
+            exit 1
+          fi
+
+      - name: La rama SPA sigue intacta (comportamiento que NO se cambia)
+        run: |
+          code_spa="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/)"
+          echo "SPA / -> $code_spa"
+          test "$code_spa" = "200"
+
+      - name: Limpieza (también si el job falló antes)
+        if: always()
+        run: docker rm -f nginx-check-internal nginx-check-external || true
+
   e2e:
     name: Frontend E2E (Playwright + backend real + Postgres)
     needs: frontend
