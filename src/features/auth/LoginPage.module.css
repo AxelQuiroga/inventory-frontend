@@ -1,14 +1,145 @@
+/* Hero del login: "la vitrina del bodeguero". Azul noche de marca con una
+   retícula técnica (metáfora del plano de depósito) y dos glows radiales que
+   son SIEMPRE el azul primario — la luz del almacén encendido. Todo debris de
+   los tokens; la card blanca flota al costado como el mostrador iluminado. */
 .page {
   min-height: 100vh;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
+  padding: var(--space-7);
+  background-color: var(--color-hero-bg);
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(30, 94, 255, 0.32), transparent 42%),
+    radial-gradient(circle at 88% 90%, rgba(30, 94, 255, 0.16), transparent 45%),
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+  animation: heroIn 500ms ease-out both;
+}
+
+/* Entrada sutil: fade + elevación. Se desactiva con prefers-reduced-motion. */
+@keyframes heroIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page {
+    animation: none;
+  }
+}
+
+/* Grid asimétrico: izquierda = marca + autoría, derecha = la acción.
+   Desktop: brand y author comparten columna izquierda (grid areas); la card
+   estira toda la columna derecha. */
+.hero {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  grid-template-areas:
+    'brand card'
+    'author card';
+  align-items: center;
+  column-gap: var(--space-7);
 }
 
 .page :global(.Card) {
+  grid-area: card;
   width: 100%;
-  max-width: 380px;
+  /* Elevación de la card flotante sobre el hero oscuro (token nuevo) */
+  box-shadow: var(--shadow-lg);
+}
+
+/* Branding — misma identidad que el sidebar (logo + Inventory ERP) */
+.brand {
+  grid-area: brand;
+}
+
+.brandIdentity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.brandLogo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.brandName {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+}
+
+.tagline {
+  margin: var(--space-4) 0 0;
+  max-width: 34ch;
+  font-size: var(--font-size-lg);
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* Autoría: chips "logo + nombre" clickeables (target _blank, el ícono es
+   decorativo — aria-hidden — y el nombre es el texto accesible del link). */
+.author {
+  grid-area: author;
+  margin-top: var(--space-7);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.authorLabel {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.authorLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-md);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--font-size-md);
+  text-decoration: none;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.authorLink:hover {
+  border-color: rgba(30, 94, 255, 0.65);
+  background: rgba(30, 94, 255, 0.14);
+  color: #ffffff;
+}
+
+.authorLink:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.authorIcon {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .title {
@@ -100,4 +231,27 @@
   margin: var(--space-1) 0 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+/* Mobile: todo se apila — logo arriba, card, y la autoría al final (no se
+   pierde nunca). El fondo oscuro queda igual. */
+@media (max-width: 1023px) {
+  .page {
+    padding: var(--space-5);
+    align-items: flex-start;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'brand'
+      'card'
+      'author';
+    row-gap: var(--space-6);
+  }
+
+  .author {
+    align-items: center;
+    margin-top: 0;
+  }
 }

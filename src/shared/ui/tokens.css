@@ -16,6 +16,10 @@
   --color-border: #e4e7ec;
   --color-text: #1d2433;
   --color-text-muted: #5f6b7f;
+  /* Superficie oscura del hero del login (la "vitrina de entrada" del
+     portfolio): azul noche de marca. La retícula + glows se dibujan encima
+     en LoginPage.module.css, siempre con el azul de marca. */
+  --color-hero-bg: #0d1526;
 
   /* Fondos suaves para badges/alertas */
   --color-primary-soft: #eaf0ff;
@@ -50,6 +54,9 @@
   /* Sombras */
   --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
   --shadow-md: 0 2px 8px rgba(16, 24, 40, 0.1);
+  /* Elevación de la card flotante: la que vive sobre el hero oscuro del login
+     necesita más profundidad que la sombra de superficie de la app interna. */
+  --shadow-lg: 0 16px 48px rgba(2, 6, 17, 0.5);
 
   /* Focus */
   --focus-ring: 0 0 0 3px rgba(30, 94, 255, 0.25);
