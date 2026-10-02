@@ -65,6 +65,14 @@ export function SaleListPage() {
         action={canSell ? <Link to="/sales/new"><Button>Nueva venta</Button></Link> : undefined}
       />
 
+      {/* Rol de solo lectura: la acción de crear está oculta, así que este
+          aviso explica POR QUÉ. Una acción ausente sin contexto parece rota. */}
+      {!canSell && (
+        <Alert tone="info">
+          <strong>Estás como Lector (solo lectura):</strong> podés ver las ventas, pero no registrar nuevas.
+        </Alert>
+      )}
+
       {success && <Alert tone="success">{success}</Alert>}
       {error && <Alert tone="error">{error}</Alert>}
 
@@ -73,7 +81,7 @@ export function SaleListPage() {
       {isEmpty && (
         <EmptyState
           title="No hay ventas"
-          description="Cuando registres la primera venta, aparece acá."
+          description={canSell ? 'Cuando registres la primera venta, aparece acá.' : 'Todavía no hay ventas registradas.'}
           action={canSell ? <Link to="/sales/new"><Button variant="secondary">Nueva venta</Button></Link> : undefined}
         />
       )}

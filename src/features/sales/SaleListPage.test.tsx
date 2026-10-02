@@ -73,20 +73,23 @@ describe('SaleListPage — listado y estados', () => {
 })
 
 describe('SaleListPage — RBAC visible', () => {
-  it('ADMIN y OPERATOR ven el botón Nueva venta', async () => {
+  it('ADMIN y OPERATOR ven el botón Nueva venta y NO el aviso de solo lectura', async () => {
     renderPage()
     expect(await screen.findByRole('link', { name: /nueva venta/i })).toBeInTheDocument()
+    expect(screen.queryByText(/solo lectura/i)).not.toBeInTheDocument()
 
     saveToken(tokenFor('OPERATOR'))
     renderPage()
     expect((await screen.findAllByRole('link', { name: /nueva venta/i })).length).toBeGreaterThan(0)
+    expect(screen.queryByText(/solo lectura/i)).not.toBeInTheDocument()
   })
 
-  it('VIEWER ve el listado pero sin acción de crear venta', async () => {
+  it('VIEWER ve el listado, un aviso de solo lectura y NO el botón Nueva venta', async () => {
     saveToken(tokenFor('VIEWER'))
     renderPage()
 
     await screen.findByText(/2 productos/)
+    expect(screen.getByText(/estás como Lector \(solo lectura\)/i)).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /nueva venta/i })).not.toBeInTheDocument()
   })
 })
