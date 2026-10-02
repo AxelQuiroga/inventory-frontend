@@ -35,6 +35,18 @@ export async function createProductViaApi(
   return { id: body.id }
 }
 
+// Desactiva/reactiva un producto vía API (requiere token ADMIN en el backend).
+// Se usa para dejar fixtures en el estado que el test necesita sin depender de
+// la UI de otro test.
+export async function apiSetActive(token: string, id: string, active: boolean): Promise<void> {
+  const action = active ? 'reactivate' : 'deactivate'
+  const res = await fetch(`${E2E_API_URL}/products/${id}/${action}`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${token}` },
+  })
+  if (res.status !== 200) throw new Error(`apiSetActive(${action}) failed (${res.status}): ${await res.text()}`)
+}
+
 // Token que la app ACEPTA (payload decodificable con exp futuro) pero el
 // BACKEND rechaza (firma inválida): el interceptor 401 tiene que limpiar la
 // sesión y redirigir al login tras el fetch real. Mismo formato que
