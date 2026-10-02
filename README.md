@@ -43,7 +43,7 @@ global limpia la sesión y redirige a `/login`.
 * Los componentes de `shared/ui` llevan su estilo **co-locado como CSS Module** (`Component.module.css`): scoping real por archivo, sin prefijos manuales de feature.
 * Las vistas/features también usan `.module.css`: si la vista solo posiciona, el archivo es chico — el estilo de los controles vive en `shared/ui`.
 * **Regla de oro: un patrón que se repite 2 veces es de `shared/ui`.** Filtros, paginación, estados vacíos, etc. nunca se copian entre features.
-* Los controles nativos (select, input…) **no se usan crudos**: pasan por el componente del design system (`Select`, `Input`).
+* Los controles nativos (select, input, textarea, checkbox…) **no se usan crudos**: pasan por el componente del design system (`Input`, `Select`, `Textarea`, `Checkbox`).
 * Los componentes legacy en `ui.css` (clases planas globales) se migran a módulos cuando se tocan: no se agranda `ui.css`.
 
 ## 🚀 Instalación

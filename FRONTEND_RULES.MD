@@ -110,6 +110,8 @@ shared/ui/
 ├── Button
 ├── Input
 ├── Select
+├── Checkbox
+├── Textarea
 ├── Card
 ├── Badge
 ├── Table
