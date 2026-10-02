@@ -103,7 +103,10 @@ describe('ProductsPage — búsqueda y filtros (query real del backend)', () => 
     expect(screen.queryByText('Pintura blanca 4L')).not.toBeInTheDocument()
   })
 
-  it('ADMIN puede ver inactivos con ?includeInactive=true', async () => {
+  it('VIEWER puede ver inactivos con ?includeInactive=true (listar es solo lectura)', async () => {
+    // El beforeEach setea ADMIN; acá forzamos VIEWER para cubrir el cambio:
+    // el checkbox ya no es admin-only (desactivar/reactivar sí lo sigue siendo).
+    saveToken(tokenFor('VIEWER'))
     const user = userEvent.setup()
     renderPage()
     await screen.findByText('Martillo') // carga inicial completa

@@ -150,16 +150,15 @@ export function ProductsPage() {
           onChange={(e) => applyFilter({ lowStock: e.target.checked ? 'true' : '' })}
         />
 
-        {/* includeInactive es ADMIN-only en el backend */}
-        {isAdmin && (
-          <Checkbox
-            id="includeInactive"
-            label="Ver inactivos"
-            className={styles.check}
-            checked={searchParams.get('includeInactive') === 'true'}
-            onChange={(e) => applyFilter({ includeInactive: e.target.checked ? 'true' : '' })}
-          />
-        )}
+        {/* includeInactive: listar inactivos es solo lectura, visible para
+            cualquier rol (desactivar/reactivar sigue siendo admin-only). */}
+        <Checkbox
+          id="includeInactive"
+          label="Ver inactivos"
+          className={styles.check}
+          checked={searchParams.get('includeInactive') === 'true'}
+          onChange={(e) => applyFilter({ includeInactive: e.target.checked ? 'true' : '' })}
+        />
       </div>
 
       {success && <Alert tone="success">{success}</Alert>}

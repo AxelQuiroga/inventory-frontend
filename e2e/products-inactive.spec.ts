@@ -2,13 +2,16 @@ import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
 
 import { E2E_ADMIN } from './e2e-constants'
-import { apiLogin, createProductViaApi, uniqueSku } from './api-helpers'
+import { apiLogin, apiSetActive, createProductViaApi, uniqueSku } from './api-helpers'
 
 // E2E real del ciclo de productos inactivos por la UI contra el server real
-// (Fastify + TEST DB, sin mocks). Cubre el flujo completo que un admin usa:
-//   desactivar (menú + confirmación) → el producto sale del listado activo →
-//   "Ver inactivos" (includeInactive, ADMIN-only) lo trae de vuelta con
-//   badge → reactivar → vuelve a la lista activa.
+// (Fastify + TEST DB, sin mocks). Dos escenarios:
+//   1) ADMIN: desactivar (menú + confirmación) → sale del listado activo →
+//      "Ver inactivos" (includeInactive) lo trae de vuelta con badge →
+//      reactivar → vuelve a la lista activa.
+//   2) VIEWER: ve el checkbox "Ver inactivos" y el listado de inactivos
+//      (listar es solo lectura para cualquier rol), pero NO tiene el menú
+//      de gestión (desactivar/reactivar siguen siendo admin-only).
 // El unit del frontend y el integration del backend prueban cada punta por
 // separado; acá el contrato UI ↔ API se valida por el browser real.
 
@@ -62,4 +65,42 @@ test('ciclo completo: desactivar → ver inactivos → reactivar (server real)',
   await page.getByLabel('Ver inactivos').click()
   await expect(page).not.toHaveURL(/includeInactive=true/)
   await expect(rowLink).toBeVisible()
+})
+
+test('VIEWER ve inactivos con el checkbox, sin menú de gestión (server real)', async ({ page }) => {
+  // Fixture aislado: un inactivo propio, creado y desactivado vía API (admin),
+  // para no depender del orden de ejecución respecto del test de ciclo.
+  const adminToken = await apiLogin(E2E_ADMIN.email, E2E_ADMIN.password)
+  const { id } = await createProductViaApi(adminToken, {
+    name: 'Repuesto E2E',
+    sku: uniqueSku('E2E-REP'),
+    minStock: 2,
+    initialStock: 6,
+  })
+  await apiSetActive(adminToken, id, false)
+
+  await page.goto('/login')
+  await page.getByLabel('Email', { exact: true }).fill('viewer@inventory.com')
+  await page.getByLabel('Contraseña', { exact: true }).fill('admin123')
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click()
+  await expect(page).toHaveURL(/\/products/)
+
+  // Listar inactivos es solo lectura: el checkbox existe para VIEWER.
+  await expect(page.getByLabel('Ver inactivos')).toBeVisible()
+  await page.getByLabel('Ver inactivos').click()
+  await expect(page).toHaveURL(/includeInactive=true/)
+
+  // El desactivado aparece con su badge...
+  await expect(page.getByRole('link', { name: 'Repuesto E2E' })).toBeVisible()
+  await expect(page.getByText('Inactivo', { exact: true })).toBeVisible()
+
+  // ...pero el menú de la fila es de solo lectura para VIEWER: puede ver el
+  // detalle, pero no las acciones de gestión (Editar/Reactivar son admin-only).
+  await page.getByRole('button', { name: 'Acciones de Repuesto E2E' }).click()
+  await expect(page.getByRole('menuitem', { name: 'Ver detalle' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: 'Reactivar' })).toHaveCount(0)
+  await expect(page.getByRole('menuitem', { name: 'Editar' })).toHaveCount(0)
+
+  // Cleanup: reactivar para no acoplar el estado con el test de ciclo admin.
+  await apiSetActive(adminToken, id, true)
 })

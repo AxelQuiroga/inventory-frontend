@@ -61,4 +61,15 @@ describe('Layout — navegación por rol', () => {
     expect(screen.queryByRole('link', { name: /inventario/i })).not.toBeInTheDocument()
     expect(screen.queryByText('Inventario')).not.toBeInTheDocument()
   })
+
+  it('la topbar muestra el nombre del rol como texto visible (Admin / Operador / Lector)', () => {
+    renderLayout('ADMIN')
+    expect(screen.getByText('Admin')).toBeInTheDocument()
+
+    renderLayout('OPERATOR')
+    expect(screen.getByText('Operador')).toBeInTheDocument()
+
+    renderLayout('VIEWER')
+    expect(screen.getByText('Lector')).toBeInTheDocument()
+  })
 })

@@ -1,7 +1,8 @@
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getSessionUser } from '../../features/auth/session'
 import { clearToken } from '../../features/auth/tokenStore'
-import { Button } from '../ui'
+import { roleLabel, roleTone } from '../../features/auth/roles'
+import { Badge, Button } from '../ui'
 import styles from './Layout.module.css'
 
 export function Layout() {
@@ -50,8 +51,9 @@ export function Layout() {
       <div>
         <header className={styles.topbar}>
           {user && (
-            <span className={styles.user} title={user.role}>
+            <span className={styles.user}>
               👤 {user.email}
+              {roleLabel(user.role) && <Badge tone={roleTone(user.role)}>{roleLabel(user.role)}</Badge>}
             </span>
           )}
           <Button variant="secondary" onClick={handleLogout}>
