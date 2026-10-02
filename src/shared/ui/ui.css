@@ -106,7 +106,7 @@
   border-color: var(--color-danger);
 }
 .Input--error .Input-field:focus-visible {
-  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.2);
+  box-shadow: var(--focus-ring-danger);
 }
 .Input-error {
   font-size: var(--font-size-sm);

@@ -1,9 +1,83 @@
-/* Textarea del design system: hereda la base visual de .Input-field (ui.css)
-   sin duplicarla (composes from global); agrega lo propio de un área de
-   texto multilínea: altura de arranque y resize vertical únicamente. */
+/* Textarea del design system — self-contained (solo tokens). Replica el
+   lenguaje visual del Input legacy de ui.css sin referencias globales: los
+   componentes de shared/ui no dependen de clases foráneas ni del orden de
+   emisión del CSS (ver review adversarial 2026-09-30). La base del field
+   quedará unificada cuando se migre ui.css por componente. */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+/* Label visualmente oculto: presente para accesibilidad (lectores de
+   pantalla, getByLabelText), fuera del flujo visual para layouts inline. */
+.labelSrOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .field {
-  composes: Input-field from global;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  max-width: 100%;
+  /* Propio de un área multilínea: altura de arranque (4 líneas) y
+     redimensionado vertical únicamente (evita romper el grid del form). */
   resize: vertical;
   min-height: 96px;
   line-height: 1.5;
+}
+
+.field::placeholder {
+  color: var(--color-text-muted);
+}
+
+.field:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.field:disabled {
+  background: var(--color-neutral-soft);
+  cursor: not-allowed;
+}
+
+/* ---- Validación (mismo lenguaje visual que .Input--error de ui.css) ---- */
+
+.wrapperError .field {
+  border-color: var(--color-danger);
+}
+
+.wrapperError .field:focus-visible {
+  border-color: var(--color-danger);
+  box-shadow: var(--focus-ring-danger);
+}
+
+.error {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+}
+
+.helper {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }

@@ -53,6 +53,10 @@
 
   /* Focus */
   --focus-ring: 0 0 0 3px rgba(30, 94, 255, 0.25);
+  /* Halo de foco en estado de error: antes estaba hardcodeado (rgba literal) en
+     tres reglas (Textarea/Select modules + ui.css). Tokenizado para que un
+     cambio de color de error no deje mitades del design system desincronizadas. */
+  --focus-ring-danger: 0 0 0 3px rgba(217, 45, 32, 0.2);
 
   /* Transiciones */
   --transition-fast: 150ms ease;

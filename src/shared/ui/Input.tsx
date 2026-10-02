@@ -1,4 +1,11 @@
-export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'id'> {
+export interface InputProps
+  extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    // className y aria-invalid/describedby los gobierna el componente: si
+    // pasaran por el spread podrían pisar el estilo del design system y la
+    // asociación de error/helper (ver review adversarial 2026-09-30).
+    'id' | 'className' | 'aria-invalid' | 'aria-describedby'
+  > {
   id: string
   label: string
   error?: string
@@ -19,7 +26,13 @@ export function Input({ id, label, error, helper, hideLabel, ...rest }: InputPro
       <label className={`Input-label${hideLabel ? ' Input-label--srOnly' : ''}`} htmlFor={id}>
         {label}
       </label>
-      <input id={id} className="Input-field" aria-invalid={error ? true : undefined} aria-describedby={describedBy} {...rest} />
+      <input
+        id={id}
+        {...rest}
+        className="Input-field"
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+      />
       {error && (
         <p id={`${id}-error`} className="Input-error">
           {error}

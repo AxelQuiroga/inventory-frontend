@@ -1,6 +1,13 @@
 import styles from './Select.module.css'
 
-export interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'id'> {
+export interface SelectProps
+  extends Omit<
+    React.SelectHTMLAttributes<HTMLSelectElement>,
+    // className y aria-invalid/describedby los gobierna el componente: si
+    // pasaran por el spread podrían pisar el estilo del design system y la
+    // asociación de error/helper (ver review adversarial 2026-09-30).
+    'id' | 'className' | 'aria-invalid' | 'aria-describedby'
+  > {
   id: string
   label: string
   /** Mensaje de validación: borde en danger, aria-invalid y aria-describedby. */
@@ -22,10 +29,10 @@ export function Select({ id, label, error, helper, ...rest }: SelectProps) {
       </label>
       <select
         id={id}
+        {...rest}
         className={styles.select}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
-        {...rest}
       />
       {error && (
         <p id={`${id}-error`} className={styles.error}>

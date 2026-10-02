@@ -31,7 +31,7 @@
   transform: scale(0);
   transform-origin: bottom left;
   clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-  background: #fff;
+  background: var(--color-surface);
   transition: transform var(--transition-fast);
 }
 

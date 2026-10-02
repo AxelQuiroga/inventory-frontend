@@ -53,6 +53,29 @@ describe('Button', () => {
     expect(button).toBeDisabled()
     expect(screen.getByRole('status')).toBeInTheDocument()
   })
+
+  it('fusiona el className del caller SIN perder la clase del design system', () => {
+    // Regresión: con `className` en el JSX antes de {...rest}, el className del
+    // caller pisaba "Button Button--primary" y el botón quedaba sin estilo.
+    render(<Button className="extra">Guardar</Button>)
+
+    const button = screen.getByRole('button', { name: 'Guardar' })
+    expect(button).toHaveClass('Button')
+    expect(button).toHaveClass('Button--primary')
+    expect(button).toHaveClass('extra')
+  })
+
+  it('respeta la variante y la combina con el className del caller', () => {
+    render(
+      <Button variant="danger" className="extra">
+        Borrar
+      </Button>,
+    )
+
+    const button = screen.getByRole('button', { name: 'Borrar' })
+    expect(button).toHaveClass('Button--danger')
+    expect(button).toHaveClass('extra')
+  })
 })
 
 describe('Input', () => {
@@ -111,6 +134,22 @@ describe('Card', () => {
     )
 
     expect(screen.getByText('contenido interno')).toBeInTheDocument()
+  })
+
+  it('fusiona el className del caller SIN perder la clase del design system', () => {
+    // Regresión (bug Round-2): `<Card className={styles.card}>` reemplazaba la
+    // caja de ui.css y el producto se veía sin fondo ni borde.
+    render(
+      <Card className="extra" data-testid="card">
+        <p>contenido interno</p>
+      </Card>,
+    )
+
+    const card = screen.getByTestId('card')
+    expect(card.className).toContain('Card')
+    expect(card.className).toContain('extra')
+    expect(card).toHaveClass('Card')
+    expect(card).toHaveClass('extra')
   })
 })
 

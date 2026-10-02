@@ -53,7 +53,7 @@
 
 .wrapperError .select:focus-visible {
   border-color: var(--color-danger);
-  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.2);
+  box-shadow: var(--focus-ring-danger);
 }
 
 .error {
