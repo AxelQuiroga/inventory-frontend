@@ -19,6 +19,8 @@ const AUTHOR_NAME = 'Sebastián Quiroga'
 const AUTHOR_GITHUB_URL = 'https://github.com/AxelQuiroga'
 const AUTHOR_LINKEDIN_URL = 'https://www.linkedin.com/in/sebasti%C3%A1n-quiroga-a273611a9/'
 const TAGLINE = 'Inventario simple para tu negocio'
+// Stack real del proyecto (verificado contra los package.json de ambos repos).
+const TECH_STACK = 'React 19 · Vite · TypeScript — Fastify 5 · Drizzle ORM · PostgreSQL'
 
 // Íconos de marca inline (sin dependencias). aria-hidden: el nombre visible
 // del link es el texto accesible; el ícono es decorativo.
@@ -98,8 +100,11 @@ export function LoginPage() {
           <div className={styles.brandIdentity}>
             <img src="/logoinventario.png" alt="" className={styles.brandLogo} />
             <span className={styles.brandName}>Inventory ERP</span>
+            {/* Vitrina pública del portfolio: el sistema es una demo */}
+            <span className={styles.demoBadge}>Versión demo</span>
           </div>
           <p className={styles.tagline}>{TAGLINE}</p>
+          <p className={styles.techStack}>{TECH_STACK}</p>
         </section>
 
         <Card>

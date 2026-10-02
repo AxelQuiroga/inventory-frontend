@@ -67,6 +67,9 @@
 .brandIdentity {
   display: flex;
   align-items: center;
+  /* En mobile el chip "Versión demo" puede no entrar en una fila: se envuelve
+     en vez de desbordar (el check responsive lo vigila). */
+  flex-wrap: wrap;
   gap: var(--space-3);
 }
 
@@ -83,11 +86,33 @@
   color: #ffffff;
 }
 
+/* Chip "Versión demo": patrón translúcido del hero (como los chips de la
+   autoría) — la vitrina pública del portfolio es una demo. */
+.demoBadge {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid rgba(30, 94, 255, 0.55);
+  border-radius: var(--radius-md);
+  background: rgba(30, 94, 255, 0.18);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
 .tagline {
   margin: var(--space-4) 0 0;
   max-width: 34ch;
   font-size: var(--font-size-lg);
   color: rgba(255, 255, 255, 0.62);
+}
+
+/* Stack tecnológico en letra chica: verificado contra los package.json. */
+.techStack {
+  margin: var(--space-3) 0 0;
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.4);
 }
 
 /* Autoría: chips "logo + nombre" clickeables (target _blank, el ícono es
