@@ -60,8 +60,8 @@ describe('DashboardPage', () => {
 
     expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Productos' })).toBeInTheDocument()
-    // Secciones sin construir se muestran deshabilitadas, no como links falsos
-    expect(screen.getByText('Inventario')).toBeInTheDocument()
+    // La sección Inventario del MVP se eliminó: no debe haber links falsos
+    expect(screen.queryByText('Inventario')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Movimientos' })).toBeInTheDocument()
     expect(screen.getByText(/seb@inventory.com/)).toBeInTheDocument()
   })

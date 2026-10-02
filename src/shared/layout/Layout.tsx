@@ -4,9 +4,6 @@ import { clearToken } from '../../features/auth/tokenStore'
 import { Button } from '../ui'
 import styles from './Layout.module.css'
 
-// Secciones pendientes del MVP: se muestran deshabilitadas (no links falsos).
-const disabledItems = ['Inventario']
-
 export function Layout() {
   const user = getSessionUser()
   const navigate = useNavigate()
@@ -19,7 +16,10 @@ export function Layout() {
   return (
     <div className={styles.layout}>
       <aside className={styles.sidebar}>
-        <div className={styles.brand}>📦 Inventory ERP</div>
+        <div className={styles.brand}>
+          <img src="/logoinventario.png" alt="" className={styles.brandLogo} />
+          <span>Inventory ERP</span>
+        </div>
         <nav className={styles.nav} aria-label="Navegación principal">
           <NavLink to="/" end className={({ isActive }) => `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ''}`}>
             Dashboard
@@ -44,11 +44,6 @@ export function Layout() {
               Usuarios
             </NavLink>
           )}
-          {disabledItems.map((label) => (
-            <span key={label} className={styles.navDisabled} title="Próximamente">
-              {label}
-            </span>
-          ))}
         </nav>
       </aside>
 

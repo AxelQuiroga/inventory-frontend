@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 
 import { server } from '../../test/test-utils'
 import { LoginPage } from './LoginPage'
@@ -19,20 +19,98 @@ function renderLogin() {
   return render(<LoginPage />)
 }
 
+// IMPORTANTE (causa raíz de un bug de tests): userEvent.setup() REEMPLAZA
+// navigator.clipboard con su propio stub (Clipboard.js: attachClipboardStubToView).
+// Por eso el mock debe definirse DESPUÉS del setup, no antes: si va antes, el
+// setup lo pisa y el componente habla con el stub de user-event (que resuelve).
+function mockClipboard() {
+  const writeText = vi.fn().mockResolvedValue(undefined)
+  Object.defineProperty(navigator, 'clipboard', {
+    value: { writeText },
+    configurable: true,
+  })
+  return writeText
+}
+
+afterEach(() => {
+  delete (navigator as unknown as Record<string, unknown>).clipboard
+})
+
+// Los aria-label de los botones "Copiar email/contraseña de demostración"
+// colisionan con selectores de texto genéricos: las queries de los inputs
+// deben apuntar al rol/etiqueta exactos, no a /email/i suelto.
+function emailInput() {
+  return screen.getByRole('textbox', { name: /email/i })
+}
+
+function passwordInput() {
+  return screen.getByLabelText('Contraseña')
+}
+
 describe('LoginPage', () => {
   it('renderiza el formulario con email, password y botón', () => {
     renderLogin()
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/contraseña|password/i)).toBeInTheDocument()
+    expect(emailInput()).toBeInTheDocument()
+    expect(passwordInput()).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /iniciar sesión|login/i })).toBeInTheDocument()
+  })
+
+  it('muestra la cuenta de demostración pública (vitrina del portfolio)', () => {
+    renderLogin()
+    expect(screen.getByLabelText(/cuenta de demostración/i)).toBeInTheDocument()
+    expect(screen.getByText('demo@inventory.com')).toBeInTheDocument()
+    expect(screen.getByText('demo1234')).toBeInTheDocument()
+  })
+
+  // El setup de user-event DEBE ir antes de mockClipboard(): si mockClipboard va
+// primero, userEvent.setup() pisa navigator.clipboard con su propio stub.
+it('copia el email de demostración al portapapeles y muestra feedback', async () => {
+    const user = userEvent.setup()
+    const writeText = mockClipboard()
+    renderLogin()
+
+    await user.click(screen.getByRole('button', { name: /copiar email de demostración/i }))
+
+    expect(writeText).toHaveBeenCalledWith('demo@inventory.com')
+    expect(await screen.findByText('¡Copiado!')).toBeInTheDocument()
+  })
+
+  it('copia la contraseña de demostración al portapapeles', async () => {
+    const user = userEvent.setup()
+    const writeText = mockClipboard()
+    renderLogin()
+
+    await user.click(screen.getByRole('button', { name: /copiar contraseña de demostración/i }))
+
+    expect(writeText).toHaveBeenCalledWith('demo1234')
+  })
+
+  it('no muestra feedback si el clipboard rechaza (permisos denegados)', async () => {
+    const user = userEvent.setup()
+
+    // Caso real del catch: writeText existe pero FALLA (contexto no seguro o
+    // permiso denegado). El handler debe tragarlo sin feedback; el valor sigue
+    // seleccionable a mano gracias al user-select: all del <code>.
+    const writeText = vi.fn().mockRejectedValue(new Error('NotAllowedError'))
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    })
+    renderLogin()
+
+    const emailCopy = screen.getByRole('button', { name: /copiar email de demostración/i })
+    await user.click(emailCopy)
+
+    expect(writeText).toHaveBeenCalledWith('demo@inventory.com')
+    expect(emailCopy).toHaveTextContent('Copiar')
   })
 
   it('login exitoso guarda el token y navega a /products', async () => {
     const user = userEvent.setup()
     renderLogin()
 
-    await user.type(screen.getByLabelText(/email/i), 'admin@inventory.com')
-    await user.type(screen.getByLabelText(/contraseña|password/i), 'admin123')
+    await user.type(emailInput(), 'admin@inventory.com')
+    await user.type(passwordInput(), 'admin123')
     await user.click(screen.getByRole('button', { name: /iniciar sesión|login/i }))
 
     await waitFor(() => {
@@ -45,8 +123,8 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     renderLogin()
 
-    await user.type(screen.getByLabelText(/email/i), 'admin@inventory.com')
-    await user.type(screen.getByLabelText(/contraseña|password/i), 'incorrecta')
+    await user.type(emailInput(), 'admin@inventory.com')
+    await user.type(passwordInput(), 'incorrecta')
     await user.click(screen.getByRole('button', { name: /iniciar sesión|login/i }))
 
     expect(await screen.findByText('Invalid credentials')).toBeInTheDocument()
@@ -59,8 +137,8 @@ describe('LoginPage', () => {
 
     // Email válido (la validación nativa lo exige) pero password corta:
     // pasa la validación nativa y falla en el server con 400.
-    await user.type(screen.getByLabelText(/email/i), 'admin@inventory.com')
-    await user.type(screen.getByLabelText(/contraseña|password/i), '123')
+    await user.type(emailInput(), 'admin@inventory.com')
+    await user.type(passwordInput(), '123')
     await user.click(screen.getByRole('button', { name: /iniciar sesión|login/i }))
 
     expect(await screen.findByText('Invalid data')).toBeInTheDocument()
@@ -73,8 +151,8 @@ describe('LoginPage', () => {
     )
     renderLogin()
 
-    await user.type(screen.getByLabelText(/email/i), 'admin@inventory.com')
-    await user.type(screen.getByLabelText(/contraseña|password/i), 'admin123')
+    await user.type(emailInput(), 'admin@inventory.com')
+    await user.type(passwordInput(), 'admin123')
     await user.click(screen.getByRole('button', { name: /iniciar sesión|login/i }))
 
     expect(await screen.findByText(/no se pudo conectar/i)).toBeInTheDocument()

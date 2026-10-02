@@ -55,10 +55,10 @@ describe('Layout — navegación por rol', () => {
     expect(screen.getByRole('link', { name: /movimientos/i })).toBeInTheDocument()
   })
 
-  it('Inventario sigue deshabilitado (única sección pendiente del MVP)', () => {
+  it('Inventario ya no aparece en la navegación (sección eliminada del MVP)', () => {
     renderLayout('ADMIN')
 
-    expect(screen.getByText('Inventario')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /inventario/i })).not.toBeInTheDocument()
+    expect(screen.queryByText('Inventario')).not.toBeInTheDocument()
   })
 })
