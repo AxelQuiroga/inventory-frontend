@@ -56,22 +56,28 @@ jobs:
       - name: Build de la imagen del frontend
         run: docker build -t inventory-frontend-check .
 
-      # Upstream A: el del compose (host interno). No existe en el runner → el
-      # proxy debe fallar con 502 POR REQUEST (los hostnames de proxy_pass se
-      # resuelven perezosamente: nginx arranca igual, no aborta).
-      - name: Boot con upstream interno (compose-like)
+      # Upstream A: IP literal 127.0.0.1 SIN servicio en un puerto cerrado.
+      # Resuelve siempre (no depende de DNS del runner) → nginx ARRANCA, pero
+      # cada request a /api/ choca contra connection refused → 502. Esto prueba
+      # el fallo ruidoso SIN el caso de hostname irresoluble (que aborta el
+      # boot entero del contenedor, verificado el 2026-10-02: con un hostname
+      # que no resuelve nginx muere en la fase de configuración y el contenedor
+      # con --rm desaparece antes de que el job pueda hacer docker exec).
+      - name: Boot con upstream interno roto (127.0.0.1:65000 -> 502)
         run: |
           docker run --rm -d --name nginx-check-internal \
-            -e API_UPSTREAM=http://backend:3000 -p 8080:80 \
+            -e API_UPSTREAM=http://127.0.0.1:65000 -p 8080:80 \
             inventory-frontend-check
           sleep 5
 
-      # Upstream B: el de Render (host externo). Puede resolver o no según el
-      # DNS del runner; por eso abajo solo se exige "no 200".
-      - name: Boot con upstream externo (Render-like)
+      # Upstream B: host externo REAL y resoluble (example.com) en lugar de un
+      # dominio Render que puede no resolver en el runner. example.com nunca
+      # devuelve 200 para /api/health (404 del lado de ese host) → valida el
+      # camino HTTPS del proxy sin depender de DNS de onrender.com.
+      - name: Boot con upstream externo (https://example.com -> nunca 200)
         run: |
           docker run --rm -d --name nginx-check-external \
-            -e API_UPSTREAM=https://inventory-backend.onrender.com -p 8081:80 \
+            -e API_UPSTREAM=https://example.com -p 8081:80 \
             inventory-frontend-check
           sleep 5
 
@@ -95,30 +101,29 @@ jobs:
             echo "OK: sin \${...} residuales"
           done
           # Y que el valor inyectado sea el que quedó (no un default mudo)
-          docker exec nginx-check-internal grep -q 'proxy_pass http://backend:3000/;' \
+          docker exec nginx-check-internal grep -q 'proxy_pass http://127.0.0.1:65000/;' \
             /etc/nginx/conf.d/default.conf
-          docker exec nginx-check-external grep -q 'proxy_pass https://inventory-backend.onrender.com/;' \
+          docker exec nginx-check-external grep -q 'proxy_pass https://example.com/;' \
             /etc/nginx/conf.d/default.conf
           echo "OK: API_UPSTREAM llegó al config renderizado en ambos"
 
-      - name: /api/health falla ruidosamente (502) en vez de fingir salud (200)
+      - name: /api/health falla ruidosamente (502/4xx) en vez de fingir salud (200)
         run: |
           code_interno="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/health)"
-          echo "interno (http://backend:3000, no existe en el runner) -> $code_interno"
+          echo "interno (127.0.0.1:65000, puerto cerrado) -> $code_interno"
           if [ "$code_interno" != "502" ]; then
-            echo "::error::se esperaba 502 con un upstream inalcanzable y llegó $code_interno"
+            echo "::error::se esperaba 502 (connection refused) y llegó $code_interno"
             exit 1
           fi
 
           code_externo="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8081/api/health)"
-          echo "externo (https://inventory-backend.onrender.com) -> $code_externo"
-          # No se exige el código exacto: según cómo resuelva DNS ese host en el
-          # runner puede ser 502 (no resuelve) u otro 4xx/5xx del lado del host.
-          # Lo que NO puede ser 200 es el requisito: un 200 con el upstream roto
-          # significaría que el probe recorre el proxy y reporta "ok" mintiendo
-          # (el zombie que healthCheckPath: /api/health evita en Render).
+          echo "externo (https://example.com) -> $code_externo"
+          # example.com responde 404/4xx para /api/health: el requisito es que
+          # NUNCA sea 200. Un 200 con el upstream devolviendo otra cosa
+          # significaría que el probe no recorre el proxy y reporta "ok"
+          # mintiendo (el zombie que healthCheckPath: /api/health evita en Render).
           if [ "$code_externo" = "200" ]; then
-            echo "::error::200 con upstream roto: /api/health no está recorriendo el proxy"
+            echo "::error::200 con upstream que no responde /api/health: el probe no recorre el proxy"
             exit 1
           fi
 
