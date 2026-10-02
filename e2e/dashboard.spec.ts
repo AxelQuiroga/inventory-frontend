@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import type { APIRequestContext, Page } from '@playwright/test'
 
 import { E2E_ADMIN, E2E_API_URL } from './e2e-constants'
-import { apiLogin, createProductViaApi, deadToken } from './api-helpers'
+import { apiLogin, createProductViaApi, deadToken, uniqueSku } from './api-helpers'
 
 // E2E real del ERP: Chromium headless + Fastify REAL + TEST DB. Sin MSW, sin
 // mocks: el recorrido completo es browser → vite dev → React → fetch →
@@ -16,17 +16,24 @@ import { apiLogin, createProductViaApi, deadToken } from './api-helpers'
 
 // El server (webServer) resetea la TEST DB al arrancar; el seed de productos
 // acá es el fixture del escenario: sano (8/2), bajo (0/5) y con stock (40/15).
+// SKUs ÚNICOS (uniqueSku), no fijos: si el CI re-corre el beforeAll (retry),
+// los SKUs fijos chocaban con 409 "SKU already exists" contra la DB que ya
+// quedó sembrada del intento anterior.
 test.beforeAll(async () => {
   const token = await apiLogin(E2E_ADMIN.email, E2E_ADMIN.password)
-  await createProductViaApi(token, { name: 'Martillo E2E', sku: 'E2E-MAR', minStock: 2, initialStock: 8 })
-  await createProductViaApi(token, { name: 'Tornillos E2E', sku: 'E2E-TOR', minStock: 5, initialStock: 0 })
-  await createProductViaApi(token, { name: 'Pintura E2E', sku: 'E2E-PIN', minStock: 15, initialStock: 40 })
+  await createProductViaApi(token, { name: 'Martillo E2E', sku: uniqueSku('E2E-MAR'), minStock: 2, initialStock: 8 })
+  await createProductViaApi(token, { name: 'Tornillos E2E', sku: uniqueSku('E2E-TOR'), minStock: 5, initialStock: 0 })
+  await createProductViaApi(token, { name: 'Pintura E2E', sku: uniqueSku('E2E-PIN'), minStock: 15, initialStock: 40 })
 })
 
 async function loginViaUi(page: Page) {
   await page.goto('/login')
-  await page.getByLabel('Email').fill(E2E_ADMIN.email)
-  await page.getByLabel('Contraseña').fill(E2E_ADMIN.password)
+  // exact:true — getByLabel matchea por substring por defecto, y el aria-label
+  // "Copiar email/contraseña de demostración" de los botones copiar colisiona
+  // con 'Email'/'Contraseña' (strict mode violation). El match exacto apunta
+  // SOLO al <label> del input.
+  await page.getByLabel('Email', { exact: true }).fill(E2E_ADMIN.email)
+  await page.getByLabel('Contraseña', { exact: true }).fill(E2E_ADMIN.password)
   await page.getByRole('button', { name: 'Iniciar sesión' }).click()
   // El login exitoso navega a /products (SPA, sin reload).
   await expect(page).toHaveURL(/\/products/)
