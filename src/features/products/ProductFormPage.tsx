@@ -242,6 +242,7 @@ export function ProductFormPage() {
                   label="Descripción"
                   value={form.description}
                   onChange={(e) => set('description', e.target.value)}
+                  error={fieldErrors.description ?? undefined}
                 />
               </div>
             </div>

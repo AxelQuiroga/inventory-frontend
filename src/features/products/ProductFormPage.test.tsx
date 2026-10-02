@@ -207,6 +207,43 @@ describe('ProductFormPage — modo crear', () => {
     expect(screen.getByText('SKU is required')).toBeInTheDocument() // bajo el campo
   })
 
+  it('el fieldError de description (tope de 500 chars) se muestra bajo el textarea', async () => {
+    const user = userEvent.setup()
+    // El schema del backend (product-schema.ts) limita description a 500 chars:
+    // este 400 es lo que el server devuelve de verdad ante el exceso.
+    server.use(
+      http.post('*/products', () =>
+        HttpResponse.json(
+          {
+            message: 'Invalid data',
+            errors: {
+              formErrors: [],
+              fieldErrors: {
+                description: ['Description must be 500 characters or less'],
+              },
+            },
+          },
+          { status: 400 },
+        ),
+      ),
+    )
+    renderForm()
+
+    await user.type(screen.getByLabelText('Nombre'), 'Lijadora')
+    await user.type(screen.getByLabelText('SKU'), 'DESC-1')
+    await user.type(screen.getByLabelText('Categoría'), 'Herramientas')
+    await user.type(screen.getByLabelText('Precio de venta'), '150')
+    await user.click(screen.getByRole('button', { name: /crear/i }))
+
+    // El error se pinta BAJO el campo Descripción y se le asocia por a11y
+    expect(
+      await screen.findByText('Description must be 500 characters or less'),
+    ).toBeInTheDocument()
+    const textarea = screen.getByLabelText('Descripción')
+    expect(textarea).toBeInvalid()
+    expect(textarea).toHaveAccessibleDescription('Description must be 500 characters or less')
+  })
+
   it('al reenviar, los fieldErrors anteriores se limpian y el submit válido navega', async () => {
     const user = userEvent.setup()
     let calls = 0

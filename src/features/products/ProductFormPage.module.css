@@ -26,11 +26,10 @@
   gap: var(--space-4);
 }
 
+/* Ocupa todo el ancho del grid. El unico hijo es el Textarea cuyo wrapper ya
+   es flex column con su propio gap: aca no hace falta layout adicional. */
 .full {
   grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
 }
 
 .actions {
