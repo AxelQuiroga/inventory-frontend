@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
+    "dev:local": "cross-env VITE_API_URL=http://localhost:3000 vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
@@ -28,6 +29,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "cross-env": "^10.1.0",
     "jsdom": "^29.1.1",
     "msw": "^2.15.0",
     "oxlint": "^1.81.0",
