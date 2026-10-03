@@ -4,6 +4,25 @@ Frontend del sistema web de gestión de inventario (Full-Stack End-to-End).
 Consume la API REST de `inventory-backend` y cubre las features del dominio:
 autenticación, dashboard, productos, movimientos, ventas y gestión de usuarios.
 
+## 👥 Demo y roles
+
+Este proyecto es una **demo pública** de portfolio. El acceso de demostración es
+de **solo lectura**, con rol **VIEWER ("Lector")**:
+
+* Email: `demo@inventory.com`
+* Password: `demo1234` *(pública a propósito: es la cuenta de vitrina)*
+
+Los roles **ADMIN** y **OPERATOR** forman parte del sistema, pero **requieren
+autenticación y permisos propios**: sus credenciales no son públicas. El admin
+se crea a partir de la variable `SEED_ADMIN_PASSWORD` (ver el README de
+`inventory-backend`).
+
+| Rol | Alcance |
+| --- | --- |
+| **VIEWER** ("Lector") | Solo lectura: ve dashboard, productos, movimientos y ventas, pero no crea ni modifica nada. Es el rol de la demo pública. |
+| **OPERATOR** | Opera el día a día: registra entradas/salidas de stock y ventas. No gestiona productos ni usuarios. |
+| **ADMIN** | Control total: productos (alta/edición/desactivación), usuarios y configuración. |
+
 ## 🛠️ Stack
 
 * React 19 + TypeScript (strict)

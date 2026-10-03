@@ -139,7 +139,10 @@ export function LoginPage() {
                 {copiedField === 'password' ? '¡Copiado!' : 'Copiar'}
               </button>
             </div>
-            <p className={styles.demoNote}>Solo lectura — podés explorar sin modificar nada.</p>
+            <p className={styles.demoNote}>
+              Rol Lector (solo lectura): explorá todo sin modificar nada. Los roles Admin y Operador
+              existen, pero requieren autenticación y permisos propios.
+            </p>
           </aside>
 
           <form onSubmit={handleSubmit} className={styles.form}>

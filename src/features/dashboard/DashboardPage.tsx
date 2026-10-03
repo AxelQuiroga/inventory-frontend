@@ -4,6 +4,7 @@ import { Alert, Badge, Card, PageHeader, Spinner, Table } from '../../shared/ui'
 import { ApiError } from '../../shared/api/api'
 import { productsApi, type Product } from '../products/productsApi'
 import { movementsApi } from '../movements/movementsApi'
+import { getSessionUser } from '../auth/session'
 import styles from './DashboardPage.module.css'
 
 interface Totals {
@@ -17,6 +18,7 @@ export function DashboardPage() {
   const [recent, setRecent] = useState<Product[] | null>(null)
   const [totals, setTotals] = useState<Totals | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const role = getSessionUser()?.role
 
   useEffect(() => {
     // KPIs desde el contrato { data, total } + agregados del server:
@@ -53,6 +55,13 @@ export function DashboardPage() {
   return (
     <>
       <PageHeader title="Dashboard" description="Resumen general del inventario" />
+
+      {role === 'VIEWER' && (
+        <Alert tone="info">
+          Estás explorando la <strong>demo pública</strong> con rol Lector: podés ver todo, pero no
+          modificar nada.
+        </Alert>
+      )}
 
       <section className={styles.kpis}>
         <Link to="/products" className={styles.kpiLink}>
@@ -107,7 +116,7 @@ export function DashboardPage() {
               <Table.Row key={p.id}>
                 <Table.Td>{p.sku}</Table.Td>
                 <Table.Td>{p.name}</Table.Td>
-                <Table.Td align="right">
+                <Table.Td>
                   {p.stock} {p.stock <= p.minStock && <Badge tone="warning">Stock bajo</Badge>}
                 </Table.Td>
               </Table.Row>
