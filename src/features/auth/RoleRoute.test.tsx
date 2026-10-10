@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest'
 
 import { RoleRoute } from './RoleRoute'
 import { saveToken, clearToken } from './tokenStore'
+import { ForbiddenPage } from '../../pages/errors/ForbiddenPage'
 
 function tokenFor(role: string) {
   return `x.${btoa(JSON.stringify({ email: 'a@b.c', role }))}.y`
@@ -21,6 +22,7 @@ function renderProtected(roles: string[]) {
             </RoleRoute>
           }
         />
+        <Route path="/forbidden" element={<ForbiddenPage />} />
         <Route path="/" element={<div>inicio</div>} />
       </Routes>
     </MemoryRouter>,
@@ -42,17 +44,17 @@ describe('RoleRoute', () => {
     clearToken()
   })
 
-  it('redirige a / si el rol no está permitido (VIEWER)', () => {
+  it('muestra la página 403 si el rol no está permitido (VIEWER)', () => {
     saveToken(tokenFor('VIEWER'))
     renderProtected(['ADMIN', 'OPERATOR'])
-    expect(screen.getByText('inicio')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'No tenés permisos para entrar acá' })).toBeInTheDocument()
     expect(screen.queryByText('contenido restringido')).not.toBeInTheDocument()
     clearToken()
   })
 
-  it('sin sesión redirige a /', () => {
+  it('sin sesión redirige a /forbidden como fallback de guard', () => {
     clearToken()
     renderProtected(['ADMIN'])
-    expect(screen.getByText('inicio')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'No tenés permisos para entrar acá' })).toBeInTheDocument()
   })
 })
