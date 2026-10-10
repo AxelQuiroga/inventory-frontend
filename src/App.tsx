@@ -14,6 +14,8 @@ import { SaleFormPage } from './features/sales/SaleFormPage'
 import { SaleDetailPage } from './features/sales/SaleDetailPage'
 import { UserListPage } from './features/users/UserListPage'
 import { UserFormPage } from './features/users/UserFormPage'
+import { ForbiddenPage } from './pages/errors/ForbiddenPage'
+import { NotFoundPage } from './pages/errors/NotFoundPage'
 
 // Redirect de la ruta vieja del historial (/products/:productId/history) al
 // detalle, donde el historial ahora vive embebido. Navigate no interpola
@@ -28,6 +30,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forbidden" element={<ForbiddenPage />} />
         <Route
           element={
             <ProtectedRoute>
@@ -45,10 +48,7 @@ export default function App() {
               </RoleRoute>
             }
           />
-          {/* Detalle: lectura para cualquier rol autenticado (la ruta del
-              historial vieja redirige acá: el historial vive embebido en la
-              ficha). Navigate no interpola params, por eso el redirect es un
-              componente chico con useParams. */}
+          {/* Detalle: lectura para cualquier rol autenticado. */}
           <Route path="/products/:id" element={<ProductDetailPage />} />
           <Route path="/products/:productId/history" element={<HistoryRedirect />} />
           <Route
@@ -67,13 +67,9 @@ export default function App() {
               </RoleRoute>
             }
           />
-          {/* Movimientos globales: lectura, cualquier rol autenticado (la
-              autoría viaja solo para ADMIN según la política de visibilidad) */}
           <Route path="/movements" element={<MovementsPage />} />
-          {/* Ventas: listar y ver detalle cualquier rol autenticado */}
           <Route path="/sales" element={<SaleListPage />} />
           <Route path="/sales/:id" element={<SaleDetailPage />} />
-          {/* Registrar venta: ADMIN + OPERATOR (matriz del backend) */}
           <Route
             path="/sales/new"
             element={
@@ -82,7 +78,6 @@ export default function App() {
               </RoleRoute>
             }
           />
-          {/* Gestión de usuarios: solo ADMIN (USERS_POLICY.MD) */}
           <Route
             path="/users"
             element={
@@ -100,7 +95,7 @@ export default function App() {
             }
           />
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   )

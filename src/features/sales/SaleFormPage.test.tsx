@@ -8,6 +8,7 @@ import { server } from '../../test/test-utils'
 import { SaleFormPage } from './SaleFormPage'
 import { RoleRoute } from '../auth/RoleRoute'
 import { saveToken, clearToken } from '../auth/tokenStore'
+import { ForbiddenPage } from '../../pages/errors/ForbiddenPage'
 
 function tokenFor(role: string) {
   return `x.${btoa(JSON.stringify({ email: 'a@b.c', role }))}.y`
@@ -40,6 +41,7 @@ function renderAt(path: string) {
           }
         />
         <Route path="/sales/:id" element={<DetailStub />} />
+        <Route path="/forbidden" element={<ForbiddenPage />} />
         <Route path="/" element={<div>inicio (redirect)</div>} />
       </Routes>
     </MemoryRouter>,
@@ -204,12 +206,12 @@ describe('SaleFormPage — carrito, total y confirmación', () => {
     expect(screen.getByRole('button', { name: /confirmar venta/i })).toBeInTheDocument()
   })
 
-  it('VIEWER es redirigido (ruta ADMIN/OPERATOR)', async () => {
+  it('VIEWER ve la página 403 (ruta ADMIN/OPERATOR)', async () => {
     clearToken()
     saveToken(tokenFor('VIEWER'))
     renderAt('/sales/new')
 
-    expect(await screen.findByText('inicio (redirect)')).toBeInTheDocument()
+    expect(await screen.findByText('No tenés permisos para entrar acá')).toBeInTheDocument()
     expect(screen.queryByText('Confirmar venta')).not.toBeInTheDocument()
   })
 })
