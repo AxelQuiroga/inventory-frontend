@@ -56,6 +56,22 @@ Reglas de la casa: las features NO se importan entre sí (solo `shared/`); los
 matchers de rol (`ProtectedRoute`, `RoleRoute`) encierran las rutas; el 401
 global limpia la sesión y redirige a `/login`.
 
+## 🛡️ Manejo de errores
+
+La interfaz incluye páginas dedicadas para los casos de acceso sin permisos y rutas inexistentes.
+
+### 403 — Acceso denegado
+
+Se muestra cuando un usuario autenticado intenta entrar a una ruta para la que no tiene el rol requerido.
+
+![Página 403 — Acceso denegado](public/images/screenshots/error-403.png)
+
+### 404 — Página no encontrada
+
+Se muestra cuando se navega a una ruta que no existe en la aplicación.
+
+![Página 404 — Página no encontrada](public/images/screenshots/error-404.png)
+
 ## 🎨 CSS — convención del design system
 
 * `shared/ui/tokens.css` es la **única fuente de valores visuales** (colores, spacing, radios, tipografía, sombras, focus). No existen valores mágicos fuera de ahí.
