@@ -43,10 +43,7 @@ src/
 │   ├── movements/
 │   ├── sales/
 │   └── users/           #   gestión de usuarios + generador de passwords
-├── shared/
-│   ├── api/             # Cliente HTTP + tipos de paginación (contrato data/total)
-│   ├── layout/          # Layout autenticado + navegación
-│   └── ui/              # Design tokens (CSS) + componentes base
+├── shared/              # Cliente HTTP, layout y componentes UI compartidos
 ├── test/                # Setup de vitest + handlers de MSW
 ├── App.tsx              # Router (cableado de todas las páginas)
 └── main.tsx
@@ -64,13 +61,13 @@ La interfaz incluye páginas dedicadas para los casos de acceso sin permisos y r
 
 Se muestra cuando un usuario autenticado intenta entrar a una ruta para la que no tiene el rol requerido.
 
-![Página 403 — Acceso denegado](public/images/screenshots/error-403.png)
+![Página 403 — Acceso denegado](public/images/inventoryfronted403.png)
 
 ### 404 — Página no encontrada
 
 Se muestra cuando se navega a una ruta que no existe en la aplicación.
 
-![Página 404 — Página no encontrada](public/images/screenshots/error-404.png)
+![Página 404 — Página no encontrada](public/images/inventoryfrontend404.png)
 
 ## 🎨 CSS — convención del design system
 
@@ -113,7 +110,7 @@ npm run lint           # Oxlint
 | ------------------- | ----------------------------------------- |
 | `npm run dev`       | Servidor de desarrollo (vite)             |
 | `npm run build`     | Typecheck + build de producción           |
-| `npm run preview`   | Sirve el build localmente                 |
-| `npm test`          | Suite unitaria (Vitest)                   |
+| `npm run preview`   | Sirve el build localmente                  |
+| `npm test`          | Suite unitaria (Vitest + Testing Library) |
 | `npm run test:e2e`  | Suite e2e (Playwright)                    |
 | `npm run lint`      | Oxlint                                    |
