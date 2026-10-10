@@ -5,8 +5,14 @@ import { getSessionUser } from './session'
 // autoridad y vuelve a validar cada permiso.
 export function RoleRoute({ roles, children }: { roles: string[]; children: React.ReactNode }) {
   const role = getSessionUser()?.role
-  if (!role || !roles.includes(role)) {
+
+  if (!role) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (!roles.includes(role)) {
     return <Navigate to="/forbidden" replace />
   }
+
   return <>{children}</>
 }
