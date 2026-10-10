@@ -23,7 +23,7 @@ function renderProtected(roles: string[]) {
           }
         />
         <Route path="/forbidden" element={<ForbiddenPage />} />
-        <Route path="/" element={<div>inicio</div>} />
+        <Route path="/login" element={<div>iniciar sesión</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -52,9 +52,9 @@ describe('RoleRoute', () => {
     clearToken()
   })
 
-  it('sin sesión redirige a /forbidden como fallback de guard', () => {
+  it('sin sesión redirige al login', () => {
     clearToken()
     renderProtected(['ADMIN'])
-    expect(screen.getByRole('heading', { name: 'No tenés permisos para entrar acá' })).toBeInTheDocument()
+    expect(screen.getByText('iniciar sesión')).toBeInTheDocument()
   })
 })
