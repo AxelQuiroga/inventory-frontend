@@ -8,6 +8,7 @@ import { server } from '../../test/test-utils'
 import { MovementFormPage } from './MovementFormPage'
 import { RoleRoute } from '../auth/RoleRoute'
 import { saveToken, clearToken } from '../auth/tokenStore'
+import { ForbiddenPage } from '../../pages/errors/ForbiddenPage'
 
 function tokenFor(role: string) {
   return `x.${btoa(JSON.stringify({ email: 'a@b.c', role }))}.y`
@@ -45,6 +46,7 @@ function renderAt(path: string) {
             </RoleRoute>
           }
         />
+        <Route path="/forbidden" element={<ForbiddenPage />} />
         <Route path="/" element={<div>inicio (redirect)</div>} />
         <Route path="/products" element={<ListStub />} />
       </Routes>
@@ -193,12 +195,12 @@ describe('MovementFormPage', () => {
     expect(screen.getByText('Invalid data')).toBeInTheDocument() // error general convive
   })
 
-  it('VIEWER es redirigido (ruta ADMIN/OPERATOR)', async () => {
+  it('VIEWER ve la página 403 (ruta ADMIN/OPERATOR)', async () => {
     clearToken()
     saveToken(tokenFor('VIEWER'))
     renderAt('/products/p1/movement')
 
-    expect(await screen.findByText('inicio (redirect)')).toBeInTheDocument()
+    expect(await screen.findByText('No tenés permisos para entrar acá')).toBeInTheDocument()
     expect(screen.queryByText('Registrar movimiento')).not.toBeInTheDocument()
   })
 
